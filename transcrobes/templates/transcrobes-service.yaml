@@ -1,0 +1,29 @@
+{{- if .Values.transcrobes.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+{{- if .Values.transcrobes.service.annotations }}
+  annotations:
+{{ toYaml .Values.transcrobes.service.annotations | indent 4 }}
+{{- end }}
+  labels:
+    {{- include "transcrobes.transcrobes.labels" . | nindent 4 }}
+{{- if .Values.transcrobes.service.labels }}
+{{ toYaml .Values.transcrobes.service.labels | indent 4 }}
+{{- end }}
+  name: {{ template "transcrobes.transcrobes.fullname" . }}
+spec:
+  ports:
+  - name: http
+    port: {{ .Values.transcrobes.service.servicePort }}
+    protocol: TCP
+    targetPort: {{ .Values.transcrobes.application.port }}
+    # TODO: is the following necessary???
+  {{- if .Values.transcrobes.service.nodePort }}
+    nodePort: {{ .Values.transcrobes.service.nodePort }}
+  {{- end }}
+  selector:
+    {{- include "transcrobes.transcrobes.matchLabels" . | nindent 4 }}
+status:
+  loadBalancer: {}
+{{- end }}

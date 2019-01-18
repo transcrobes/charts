@@ -1,0 +1,48 @@
+image: dtzar/helm-kubectl  # alpine image with the latest helm and kubectl
+
+pages:
+  stage: deploy
+  script:
+    - helm init --client-only
+    - mkdir -p ./public
+    - "echo \"User-Agent: *\nDisallow: /\" > ./public/robots.txt"
+    - helm dependency update transcrobes/
+    - helm package transcrobes/
+    - helm repo index  --url https://charts.transcrob.es .
+    - mkdir -p public
+    - mv index.yaml public/
+    - mv transcrobes*.tgz public/
+  artifacts:
+    paths:
+      - public
+  only:
+    - master
+  except:
+    - schedules
+
+.issue-certificate:
+  image: node:10
+  stage: build
+  script:
+    - |-
+      echo "Check if env variables are set properly"
+      for var in LE_EMAIL LE_DOMAINS LE_GITLAB_REPOSITORY LE_GITLAB_TOKEN LE_CHALLENGE_PATH; do
+        if [ -z "${!var}" ]; then
+          echo "$var is blank; Please ensure it is set"
+          exit 1
+        fi
+      done
+    - yarn global add @leipert/gitlab-letsencrypt@^4.0.0
+    - >-
+      gitlab-pages-le
+      --email ${LE_EMAIL}
+      --domain ${LE_DOMAINS}
+      --repository ${LE_GITLAB_REPOSITORY}
+      --token ${LE_GITLAB_TOKEN}
+      --path ${LE_CHALLENGE_PATH}
+      ${LE_PROD_FLAG}
+
+letsencrypt-renewal:
+  extends: .issue-certificate
+  only:
+    - schedules

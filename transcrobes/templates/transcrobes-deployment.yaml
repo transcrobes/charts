@@ -1,0 +1,117 @@
+{{- if .Values.transcrobes.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "transcrobes.transcrobes.fullname" . }}
+  labels:
+    {{- include "transcrobes.transcrobes.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.transcrobes.replicaCount }}
+  {{- if .Values.transcrobes.strategy }}
+  strategy:
+{{ toYaml .Values.transcrobes.strategy | indent 4 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "transcrobes.transcrobes.matchLabels" . | nindent 6 }}
+  template:
+    metadata:
+    {{- if .Values.transcrobes.podAnnotations }}
+      annotations:
+{{ toYaml .Values.transcrobes.podAnnotations | indent 8 }}
+    {{- end }}
+      labels:
+        {{- include "transcrobes.transcrobes.labels" . | nindent 8 }}
+    spec:
+      initContainers:
+        - name: check-db-ready
+          image: postgres:11
+          command: ['sh', '-c',
+            'until psql -c "select 1;";
+            do echo waiting for database; sleep 2; done;']
+          env:
+            - name: PGUSER
+              value: "{{ .Values.postgresql.postgresqlUsername }}"
+            - name: PGDATABASE
+              value: "{{ .Values.postgresql.postgresqlDatabase }}"
+            - name: PGPASSWORD
+              value: "{{ .Values.postgresql.postgresqlPassword }}"
+            - name: PGHOST
+              value: "{{ .Values.postgresql.fullnameOverride }}"
+      containers:
+        - name: {{ template "transcrobes.name" . }}-{{ .Values.transcrobes.name }}
+          image: "{{ .Values.transcrobes.image.repository }}:{{ .Values.transcrobes.image.tag }}"
+          imagePullPolicy: {{ .Values.transcrobes.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.transcrobes.application.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /hello
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: {{ include "transcrobes.transcrobes.fullname" . }}
+              periodSeconds: 10
+              initialDelaySeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /hello
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: {{ include "transcrobes.transcrobes.fullname" . }}
+              periodSeconds: 10
+              initialDelaySeconds: 5
+          env:
+            {{- range $key, $value := .Values.transcrobes.extraEnv }}
+            - name: {{ $key }}
+              value: "{{ $value }}"
+            {{- end }}
+            - name: PYTHONUNBUFFERED  # MUST put or no logs printed to kube, but probably should be in values
+              value: "0"
+            - name: POSTGRES_USER
+              value: "{{ .Values.postgresql.postgresqlUsername }}"
+            - name: POSTGRES_DATABASE
+              value: "{{ .Values.postgresql.postgresqlDatabase }}"
+            - name: POSTGRES_PASSWORD
+              value: "{{ .Values.postgresql.postgresqlPassword }}"
+            - name: POSTGRES_HOST
+              value: "{{ .Values.postgresql.fullnameOverride }}"
+            - name: TRANSCROBES_PUBLIC_HOSTS  # this is poorly named as it includes non-public hosts
+              value: {{ include "transcrobes.publichosts" . }},{{ include "transcrobes.transcrobes.fullname" . }},{{ include "transcrobes.transcrobes.reallyFullname" . }}
+            - name: TRANSCROBES_ANKROBES_HOST
+              value: {{ include "transcrobes.ankrobes.fullname" . }}
+            - name: TRANSCROBES_CORENLP_HOST
+              value: {{ include "transcrobes.corenlp.fullname" . }}
+            - name: TRANSCROBES_BING_SUBSCRIPTION_KEY
+              value: "{{ .Values.transcrobes.bingSubscriptionKey }}"
+            - name: TRANSCROBES_SECRET_KEY
+              value: "{{ .Values.transcrobes.secretKey }}"
+            - name: TRANSCROBES_CCCEDICT_PATH
+              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.ccCedict }}"
+            - name: TRANSCROBES_ABCEDICT_PATH
+              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.abCedict }}"
+            - name: TRANSCROBES_HSKDICT_PATH
+              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.hskDict }}"
+            - name: TRANSCROBES_SUBLEX_FREQ_PATH
+              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.sublexFreq }}"
+            {{- if .Values.transcrobes.debug }}
+            - name: TRANSCROBES_DEBUG
+              value: "True"
+            {{- end }}
+
+      {{- if .Values.transcrobes.persistence.enabled }}
+          volumeMounts:
+          - mountPath: "{{ .Values.transcrobes.persistence.dataRoot }}"
+            name: {{ include "transcrobes.transcrobes.fullname" . }}
+      volumes:
+        - name: {{ include "transcrobes.transcrobes.fullname" . }}
+          persistentVolumeClaim:
+            claimName: {{ include "transcrobes.transcrobes.fullname" . }}
+      {{- end }}
+
+      restartPolicy: Always
+status: {}
+{{- end }}

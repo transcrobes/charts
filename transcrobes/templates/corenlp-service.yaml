@@ -1,0 +1,29 @@
+{{- if .Values.corenlp.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+{{- if .Values.corenlp.service.annotations }}
+  annotations:
+{{ toYaml .Values.corenlp.service.annotations | indent 4 }}
+{{- end }}
+  labels:
+    {{- include "transcrobes.corenlp.labels" . | nindent 4 }}
+{{- if .Values.corenlp.service.labels }}
+{{ toYaml .Values.corenlp.service.labels | indent 4 }}
+{{- end }}
+  name: {{ template "transcrobes.corenlp.fullname" . }}
+spec:
+  ports:
+  - name: http
+    port: {{ .Values.corenlp.service.servicePort }}
+    protocol: TCP
+    targetPort: {{ .Values.corenlp.application.port }}
+    # TODO: is the following necessary???
+  {{- if .Values.corenlp.service.nodePort }}
+    nodePort: {{ .Values.corenlp.service.nodePort }}
+  {{- end }}
+  selector:
+    {{- include "transcrobes.corenlp.matchLabels" . | nindent 4 }}
+status:
+  loadBalancer: {}
+{{- end }}

@@ -1,0 +1,384 @@
+## Inspired by the default template made by helm create and https://github.com/helm/charts/tree/master/stable/prometheus
+
+## Use RBAC
+## TODO: this is not properly used yet and hasn't been tested outside of microk8s
+##
+rbac:
+  create: true
+
+## Define serviceAccount names for components. Defaults to component's fully qualified name.
+## TODO: these aren't used yet
+##
+serviceAccounts:
+  ankrobes:
+    create: true
+    name:
+  corenlp:
+    create: true
+    name:
+  transcrobes:
+    create: true
+    name:
+
+## Use the nginx-ingress chart dependency
+## aliased from nginx-ingress in requirements due to template limitations
+##
+nginxingress:
+  enabled: true
+  controller:
+    ## TODO: Currently only NodePort is supported, cloud provider LB support to come
+    ##
+    service:
+      type: NodePort
+      nodePorts:
+        ## Define a static NodePort so the cloud provider router can point to a known value
+        ##
+        https: 32443
+      ## Enable plain http. This won't work on most browsers, who won't get from an http api when the page is https
+      ##
+      enableHttp: false
+      ## Enable https.
+      ##
+      enableHttps: true  # TODO: this should be linked to the tls configs somehow
+
+## Anki 2 compatible sync server, with additions
+##
+ankrobes:
+  ## If false, ankrobes will not be installed
+  ##
+  enabled: true
+
+  ## ankrobes container name
+  ##
+  name: ankrobes
+
+  ## Ingress related configuration for setting up the SSL ingress
+  ##
+  ingress:
+    path: /
+    tls:
+      enabled: true
+      secretName: "transcrobes-ankrobes-cert"
+      issuer: letsencrypt-staging
+
+  ## ankrobes container image
+  ##
+  image:
+    repository: registry.gitlab.com/transcrobes/transcrobes/tc_ankrobes
+    tag: v0.0.1
+    pullPolicy: IfNotPresent
+
+  ## Annotations to be added to ankrobes pods
+  ##
+  podAnnotations: {}
+
+  ## Use a StatefulSet if replicaCount needs to be greater than 1 (see below)  # TODO: change this copy/paste message
+  ##
+  replicaCount: 1
+
+  ## Additional ankrobes container environment variable
+  ## For instance to add a http_proxy
+  ##
+  extraEnv: {}
+
+  ## Strategy
+  ##
+  strategy:
+    type: Recreate
+
+  ## publicly defined and accessible FQDN pointing to this kubernetes cluster
+  ##
+  hosts: ['ankrobes.example.com']  # TODO: work out how to force this value to be passed
+
+  ## TODO: document
+  service:
+    annotations: {}
+    labels: {}
+    clusterIP: ""
+
+    loadBalancerIP: ""
+    loadBalancerSourceRanges: []
+    servicePort: 80
+    type: ClusterIP
+
+  application:
+    port: 27701
+
+  ## Additional ankrobes container arguments
+  ##
+  extraArgs: {}
+
+  ## The URL prefix at which the container can be accessed. Useful in the case the '-web.external-url' includes a slug
+  ## so that the various internal URLs are still able to access as they are in the default case.
+  ## (Optional)
+  prefixURL: ""
+
+  ## Persistent Volume Storage configuration.
+  ## ref: https://kubernetes.io/docs/user-guide/persistent-volumes
+  ##
+  persistence:
+    ## Enable Ankrobes persistence using Persistent Volume Claims.
+    ##
+    enabled: true
+    ## Persistent Volume Storage Class
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    ##   GKE, AWS & OpenStack)
+    ##
+    # storageClass: "-"
+
+    ## A manually managed Persistent Volume and Claim
+    ## Requires persistence.enabled: true
+    ## If defined, PVC must be created manually before volume will be bound
+    # existingClaim:
+
+    accessMode: ReadWriteOnce
+    size: 1Gi
+
+    # app config passed as env vars and used for volume mount
+    dataRoot: "/opt/ankrobes/collections"
+
+  ## app config passed as env vars
+  ## Internal IP for ankrobes server to listen on
+  ##
+  hostListen: 0.0.0.0
+
+  ## Internal port for ankrobes server to listen on
+  ##
+  hostPort: 27701
+  ## If not set, will default to the cluster transcrobes svc, should be formatted as follows
+  ## TODO: currently transcrobes authenticates using the Django-internal user, so this shouldn't
+  ## be changed. The user service will be externalised, or the projects merged into one
+  ## see: https://gitlab.com/transcrobes/transcrobes/issues/18
+  ##
+  # authUrl: "http://transcrobes-service/auth"
+
+## Stanford's CoreNLP
+##
+corenlp:
+  ## If false, corenlp will not be installed
+  ##
+  enabled: true
+
+  ## corenlp container name
+  ##
+  name: corenlp
+
+  ## corenlp container image
+  ##
+  image:
+    repository: transcrobes/corenlp-chinese
+    tag: 3.9.2
+    pullPolicy: IfNotPresent
+
+  ## Annotations to be added to corenlp pods
+  ##
+  podAnnotations: {}
+
+  ## Use a StatefulSet if replicaCount needs to be greater than 1 (see below)  # TODO: change this copy/paste message
+  ##
+  replicaCount: 1
+
+  ## Additional corenlp container environment variable
+  ## For instance to add a http_proxy
+  ##
+  extraEnv: {}
+
+  ## Strategy
+  ##
+  strategy:
+    type: Recreate
+
+  ## TODO: document
+  service:
+    annotations: {}
+    labels: {}
+    clusterIP: ""
+
+    loadBalancerIP: ""
+    loadBalancerSourceRanges: []
+    servicePort: 80
+    type: ClusterIP
+
+  application:
+    port: 9000
+
+  ## Additional corenlp container arguments
+  ##
+  extraArgs: {}
+
+  ## The URL prefix at which the container can be accessed. Useful in the case the '-web.external-url' includes a slug
+  ## so that the various internal URLs are still able to access as they are in the default case.
+  ## (Optional)
+  prefixURL: ""
+
+## Django App providing the glue and intelligence between other services
+##
+transcrobes:
+  ## If false, transcrobes will not be installed
+  ##
+  enabled: true
+
+  ## transcrobes container name
+  ##
+  name: transcrobes
+
+  ## Ingress related configuration for setting up the SSL ingress
+  ##
+  ingress:
+    path: /
+    tls:
+      enabled: true
+      secretName: "transcrobes-transcrobes-cert"
+      issuer: letsencrypt-staging
+
+  ## transcrobes container image
+  ##
+  image:
+    repository: registry.gitlab.com/transcrobes/transcrobes/tc_transcrobes
+    tag: v0.0.1
+    pullPolicy: IfNotPresent
+
+  ## Annotations to be added to transcrobes pods
+  ##
+  podAnnotations: {}
+
+  ## Use a StatefulSet if replicaCount needs to be greater than 1 (see below)  # TODO: change this copy/paste message
+  ##
+  replicaCount: 1
+
+  ## This persistence houses the static data files (dictionaries, wordlists) for the django service
+  ## TODO: these should be dealt with otherwise
+  ##
+  persistence:
+    enabled: true
+    accessMode: ReadWriteOnce  # TODO: should be ReadOnlyMany to have multiple pods but how do we provision the files?
+    size: 1Gi
+
+    ## App config passed as env var and used for volume mount
+    ##
+    dataRoot: '/opt/transcrobes/'
+
+  ## These are turned into env vars that are required for the Django app
+  ##
+  bingSubscriptionKey: "your_bing_subscription_key"
+  secretKey: 'not_a_very_good_secret'  # FIXME: do as a secret
+  debug: true
+
+  ## Files mounted into the dataRoot
+  ## TODO: see notes in the persistence section above
+  ##
+  ccCedict: 'data/cedict.txt'
+  abCedict: 'data/abcdict.txt'
+  hskDict: 'data/hsk{}.txt'
+  sublexFreq: 'data/subtlex-ch.utf8.txt'
+
+  ## Additional transcrobes container environment variable
+  ## For instance to add a http_proxy
+  ##
+  extraEnv:
+    DJANGO_SETTINGS_MODULE: transcrobes.settings.container
+    PYTHONDONTWRITEBYTECODE: "1"
+
+  ## Strategy
+  ##
+  strategy:
+    type: Recreate
+
+  ## publicly defined and accessible FQDN pointing to this kubernetes cluster
+  ##
+  hosts: ['transcrobes.example.com']
+
+  ## TODO: document
+  service:
+    annotations: {}
+    labels: {}
+    clusterIP: ""
+
+    loadBalancerIP: ""
+    loadBalancerSourceRanges: []
+    servicePort: 80
+    type: ClusterIP
+
+  ## Port for the Django application to listen on
+  ##
+  application:
+    port: 8000
+
+  ## Additional transcrobes container arguments
+  ##
+  extraArgs: {}
+
+  ## The URL prefix at which the container can be accessed. Useful in the case the '-web.external-url' includes a slug
+  ## so that the various internal URLs are still able to access as they are in the default case.
+  ## (Optional)
+  prefixURL: ""
+
+## This section inspired by
+## https://github.com/helm/charts/blob/cbd5e811a44c7bac6226b019f1d1810ef5ee45fa/stable/quassel/values.yaml
+## Configuration values for the postgresql dependency.
+## ref: https://github.com/kubernetes/charts/blob/master/stable/postgresql/README.md
+##
+postgresql:
+
+  ## Use the PostgreSQL chart dependency.
+  ##
+  enabled: true
+
+  ## Must override due to the postgresql.fullname and postgresql.master.fullname templates not working in our templates
+  ## TODO: it is probably possible to do this properly with imports
+  ##
+  fullnameOverride: tckpostgres
+
+  ## Override of upstream pullPolicy
+  ##
+  image:
+    pullPolicy: IfNotPresent
+
+  ## Annotations to be added to ankrobes pods
+  ##
+  podAnnotations: {}
+
+  ### PostgreSQL User to create.
+  ##
+  postgresqlUsername: postgres
+
+  ## PostgreSQL Password for the new user.
+  ## If not set, a random 10 characters password will be used.
+  ##
+  postgresqlPassword: transpass
+
+  ## PostgreSQL Database to create.
+  ##
+  postgresqlDatabase: transcrobes
+
+  ## Persistent Volume Storage configuration.
+  ## ref: https://kubernetes.io/docs/user-guide/persistent-volumes
+  ##
+  persistence:
+    ## Enable PostgreSQL persistence using Persistent Volume Claims.
+    ##
+    enabled: true
+    ## Persistent Volume Storage Class
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    ##   GKE, AWS & OpenStack)
+    ##
+    # storageClass: "-"
+
+    ## A manually managed Persistent Volume and Claim
+    ## Requires persistence.enabled: true
+    ## If defined, PVC must be created manually before volume will be bound
+    # existingClaim:
+
+    accessMode: ReadWriteOnce
+    size: 1Gi
+
+  ## Don't always pull image
+  volumePermissions:
+    image:
+      pullPolicy: IfNotPresent

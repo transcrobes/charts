@@ -1,0 +1,15 @@
+dependencies:
+- name: postgresql
+  version: 3.9.x
+  repository: https://kubernetes-charts.storage.googleapis.com/
+  condition: postgresql.enabled
+  tags:
+    - transcrobes-database
+
+- name: nginx-ingress
+  version: 1.1.x
+  alias: nginxingress  # because https://github.com/helm/helm/issues/2192
+  repository: https://kubernetes-charts.storage.googleapis.com
+  condition: nginx-ingress.enabled  # FIXME: this doesn't appear to work
+  tags:
+    - transcrobes-nginx

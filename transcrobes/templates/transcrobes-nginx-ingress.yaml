@@ -1,0 +1,39 @@
+{{- if .Values.transcrobes.enabled -}}
+{{- $fullName := include "transcrobes.transcrobes.fullname" . -}}
+{{- $ingressPath := .Values.transcrobes.ingress.path -}}
+{{- $servicePort := .Values.transcrobes.service.servicePort -}}
+{{- $reallyFullName := include "transcrobes.transcrobes.reallyFullname" . -}}
+{{- $authUrl := printf "%s%s%s" "http://" $reallyFullName "/authget" -}}
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: {{ .Values.nginxingress.controller.ingressClass }}
+    nginx.ingress.kubernetes.io/auth-url: {{ $authUrl }}
+    certmanager.k8s.io/cluster-issuer: {{ .Values.transcrobes.ingress.tls.issuer }}
+    kubernetes.io/tls-acme: "true"
+
+  name: {{ include "transcrobes.transcrobes.fullname" . }}
+  labels:
+    {{- include "transcrobes.transcrobes.labels" . | nindent 4 }}
+
+spec:
+{{- if .Values.transcrobes.ingress.tls.enabled }}
+  tls:
+    - hosts:
+      {{- range .Values.transcrobes.hosts }}
+        - {{ . }}
+      {{- end }}
+      secretName: {{ .Values.transcrobes.ingress.tls.secretName }}
+{{- end }}
+  rules:
+  {{- range .Values.transcrobes.hosts }}
+    - host: {{ . }}
+      http:
+        paths:
+          - path: {{ $ingressPath }}
+            backend:
+              serviceName: {{ $fullName }}
+              servicePort: http
+  {{- end }}
+{{- end }}

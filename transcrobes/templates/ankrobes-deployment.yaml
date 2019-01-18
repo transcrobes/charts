@@ -1,0 +1,77 @@
+{{- if .Values.ankrobes.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "transcrobes.ankrobes.fullname" . }}
+  labels:
+    {{- include "transcrobes.ankrobes.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.ankrobes.replicaCount }}
+  {{- if .Values.ankrobes.strategy }}
+  strategy:
+{{ toYaml .Values.ankrobes.strategy | indent 4 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "transcrobes.ankrobes.matchLabels" . | nindent 6 }}
+  template:
+    metadata:
+    {{- if .Values.ankrobes.podAnnotations }}
+      annotations:
+{{ toYaml .Values.ankrobes.podAnnotations | indent 8 }}
+    {{- end }}
+      labels:
+        {{- include "transcrobes.ankrobes.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ template "transcrobes.name" . }}-{{ .Values.ankrobes.name }}
+          image: "{{ .Values.ankrobes.image.repository }}:{{ .Values.ankrobes.image.tag }}"
+          imagePullPolicy: {{ .Values.ankrobes.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.ankrobes.application.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          env:
+            {{- range $key, $value := .Values.ankrobes.extraEnv }}
+            - name: {{ $key }}
+              value: {{ $value }}
+            {{- end }}
+            - name: PYTHONUNBUFFERED  # MUST put or no logs printed to kube, but probably should be in values
+              value: "0"
+            - name: ANKROBES_DATA_ROOT
+              value: "{{ .Values.ankrobes.persistence.dataRoot }}"
+            - name: ANKROBES_HOST_LISTEN
+              value: "{{ .Values.ankrobes.hostListen }}"
+            - name: ANKROBES_HOST_PORT
+              value: "{{ .Values.ankrobes.hostPort }}"
+            - name: ANKROBES_AUTH_URL
+            {{- if .Values.transcrobes.authUrl }}
+              value: "{{ .Values.ankrobes.authUrl }}"
+            {{- else }}
+              value: http://{{ include "transcrobes.transcrobes.fullname" . }}/auth
+            {{- end }}
+            # TODO: not used
+            - name: TRANSCROBES_HOST
+              value: {{ include "transcrobes.transcrobes.fullname" . }}
+
+      {{- if .Values.ankrobes.persistence.enabled }}
+          volumeMounts:
+          - mountPath: "{{ .Values.ankrobes.persistence.dataRoot }}"
+            name: {{ include "transcrobes.ankrobes.fullname" . }}
+      volumes:
+        - name: {{ include "transcrobes.ankrobes.fullname" . }}
+          persistentVolumeClaim:
+            claimName: {{ include "transcrobes.ankrobes.fullname" . }}
+      {{- end }}
+
+      restartPolicy: Always
+status: {}
+{{- end }}
