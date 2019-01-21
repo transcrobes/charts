@@ -12,7 +12,7 @@ metadata:
     nginx.ingress.kubernetes.io/auth-url: {{ $authUrl }}
     certmanager.k8s.io/cluster-issuer: {{ .Values.transcrobes.ingress.tls.issuer }}
     kubernetes.io/tls-acme: "true"
-
+    nginx.ingress.kubernetes.io/enable-cors: "true"
   name: {{ include "transcrobes.transcrobes.fullname" . }}
   labels:
     {{- include "transcrobes.transcrobes.labels" . | nindent 4 }}
