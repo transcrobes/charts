@@ -354,6 +354,10 @@ postgresql:
   ##
   postgresqlDatabase: transcrobes
 
+  ## PostgreSQL override parameters
+  ##
+  postgresqlConfiguration: { "sharedBuffers": "128MB", "maxConnections": 300 }
+
   ## Persistent Volume Storage configuration.
   ## ref: https://kubernetes.io/docs/user-guide/persistent-volumes
   ##
