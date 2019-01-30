@@ -65,7 +65,7 @@ ankrobes:
   ##
   image:
     repository: registry.gitlab.com/transcrobes/transcrobes/tc_ankrobes
-    tag: v0.0.1
+    tag: v0.0.2
     pullPolicy: IfNotPresent
 
   ## Annotations to be added to ankrobes pods
@@ -238,7 +238,7 @@ transcrobes:
   ##
   image:
     repository: registry.gitlab.com/transcrobes/transcrobes/tc_transcrobes
-    tag: v0.0.1
+    tag: v0.0.2
     pullPolicy: IfNotPresent
 
   ## Annotations to be added to transcrobes pods
