@@ -17,7 +17,7 @@ spec:
   - name: http
     port: {{ .Values.transcrobes.service.servicePort }}
     protocol: TCP
-    targetPort: {{ .Values.transcrobes.application.port }}
+    targetPort: {{ .Values.transcrobes.application.listenPort }}
     # TODO: is the following necessary???
   {{- if .Values.transcrobes.service.nodePort }}
     nodePort: {{ .Values.transcrobes.service.nodePort }}

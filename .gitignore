@@ -87,4 +87,5 @@ local_settings.py
 
 # Added
 .env
-charts/*
+transcrobes/charts/*
+overrides.yaml

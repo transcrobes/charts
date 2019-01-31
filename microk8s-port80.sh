@@ -55,7 +55,7 @@ do
         then
             echo "Looks like port $i is no longer listening, killing the socat pid $socat_pid"
             kill -9 $socat_pid
-            sleep 5  # sleep a bit so the process can end properly
+            sleep 10  # sleep a bit so the process can end properly and free port $TCP4_LISTEN_PORT
             unset socat_pid
         fi
     done
