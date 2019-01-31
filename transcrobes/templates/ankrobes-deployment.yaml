@@ -35,10 +35,16 @@ spec:
             httpGet:
               path: /
               port: http
+              periodSeconds: {{ .Values.ankrobes.readiness.periodSeconds }}
+              initialDelaySeconds: {{ .Values.ankrobes.readiness.initialDelaySeconds }}
+              timeoutSeconds: {{ .Values.ankrobes.readiness.timeoutSeconds }}
           readinessProbe:
             httpGet:
               path: /
               port: http
+              periodSeconds: {{ .Values.ankrobes.readiness.periodSeconds }}
+              initialDelaySeconds: {{ .Values.ankrobes.readiness.initialDelaySeconds }}
+              timeoutSeconds: {{ .Values.ankrobes.readiness.timeoutSeconds }}
           env:
             {{- range $key, $value := .Values.ankrobes.extraEnv }}
             - name: {{ $key }}

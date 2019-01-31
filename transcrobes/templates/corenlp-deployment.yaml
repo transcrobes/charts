@@ -35,7 +35,9 @@ spec:
             httpGet:
               path: /
               port: http
-              periodSeconds: 10
+              periodSeconds: {{ .Values.corenlp.readiness.periodSeconds }}
+              initialDelaySeconds: {{ .Values.corenlp.readiness.initialDelaySeconds }}
+              timeoutSeconds: {{ .Values.corenlp.readiness.timeoutSeconds }}
           readinessProbe:
             exec:
               command:  # FIXME: this needs to be put into values probably to support different languages
@@ -45,8 +47,9 @@ spec:
                 - 'localhost:9000/?properties={"annotators":"tokenize,ssplit,pos","outputFormat":"json"}'
                 -  '-O'
                 - '-'
-              initialDelaySeconds: 5
-              periodSeconds: 60
+              periodSeconds: {{ .Values.corenlp.readiness.periodSeconds }}
+              initialDelaySeconds: {{ .Values.corenlp.readiness.initialDelaySeconds }}
+              timeoutSeconds: {{ .Values.corenlp.readiness.timeoutSeconds }}
           env:
             {{- range $key, $value := .Values.corenlp.extraEnv }}
             - name: {{ $key }}
