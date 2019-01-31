@@ -61,6 +61,13 @@ ankrobes:
       secretName: "transcrobes-ankrobes-cert"
       issuer: letsencrypt-staging
 
+    ## The max body size for requests, see http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
+    ## This needs to be at least as large as the largest request, and as Anki exchanges full, uncompressed databases,
+    ## this can be very large
+    ## WARNING: this settings equates to an effective limit on the maximum user database size
+    ##
+    maxBodySize: 50m
+
   ## ankrobes container image
   ##
   image:
@@ -137,6 +144,19 @@ ankrobes:
     # app config passed as env vars and used for volume mount
     dataRoot: "/opt/ankrobes/collections"
 
+  ## Configuration for the liveness and readiness probes
+  ## liveness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes
+  liveness:
+    periodSeconds: 15
+    initialDelaySeconds: 5
+    timeoutSeconds: 10
+
+  ## readiness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes
+  readiness:
+    periodSeconds: 15
+    initialDelaySeconds: 5
+    timeoutSeconds: 10
+
   ## app config passed as env vars
   ##
   application:
@@ -195,6 +215,19 @@ corenlp:
     servicePort: 80
     type: ClusterIP
 
+  ## Configuration for the liveness and readiness probes
+  ## liveness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes
+  liveness:
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 5
+
+  ## readiness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes
+  readiness:
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 5
+
   application:
     listenPort: 9000
 
@@ -227,6 +260,12 @@ transcrobes:
       secretName: "transcrobes-transcrobes-cert"
       issuer: letsencrypt-staging
 
+    ## The max body size for requests, see http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
+    ## This needs to be at least as large as the largest request, with the current clients this is still relatively
+    ## modest, though future needs might vary greatly
+    ##
+    maxBodySize: 5m
+
   ## transcrobes container image
   ##
   image:
@@ -253,6 +292,20 @@ transcrobes:
     ## App config passed as env var and used for volume mount
     ##
     dataRoot: '/opt/transcrobes/'
+
+  ## Configuration for the liveness and readiness probes
+  ## liveness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes
+  liveness:
+    initialDelaySeconds: 20
+    periodSeconds: 5
+    timeoutSeconds: 5
+
+  ## readiness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes
+  readiness:
+    initialDelaySeconds: 20
+    periodSeconds: 5
+    timeoutSeconds: 5
+
 
   ## These are turned into env vars that are required for the Django app
   ##

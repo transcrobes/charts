@@ -11,6 +11,7 @@ metadata:
     kubernetes.io/ingress.class: {{ .Values.nginxingress.controller.ingressClass }}
     nginx.ingress.kubernetes.io/auth-url: {{ $authUrl }}
     certmanager.k8s.io/cluster-issuer: {{ .Values.transcrobes.ingress.tls.issuer }}
+    nginx.ingress.kubernetes.io/proxy-body-size: {{ .Values.transcrobes.ingress.maxBodySize }}
     kubernetes.io/tls-acme: "true"
     nginx.ingress.kubernetes.io/enable-cors: "true"
   name: {{ include "transcrobes.transcrobes.fullname" . }}
