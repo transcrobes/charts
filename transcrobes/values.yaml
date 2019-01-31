@@ -101,9 +101,6 @@ ankrobes:
     servicePort: 80
     type: ClusterIP
 
-  application:
-    port: 27701
-
   ## Additional ankrobes container arguments
   ##
   extraArgs: {}
@@ -141,19 +138,15 @@ ankrobes:
     dataRoot: "/opt/ankrobes/collections"
 
   ## app config passed as env vars
-  ## Internal IP for ankrobes server to listen on
   ##
-  hostListen: 0.0.0.0
+  application:
+    ## Internal IP for ankrobes server to listen on
+    ##
+    listenAddress: 0.0.0.0
+    ## Internal port for ankrobes server to listen on
+    ##
+    listenPort: 27701
 
-  ## Internal port for ankrobes server to listen on
-  ##
-  hostPort: 27701
-  ## If not set, will default to the cluster transcrobes svc, should be formatted as follows
-  ## TODO: currently transcrobes authenticates using the Django-internal user, so this shouldn't
-  ## be changed. The user service will be externalised, or the projects merged into one
-  ## see: https://gitlab.com/transcrobes/transcrobes/issues/18
-  ##
-  # authUrl: "http://transcrobes-service/auth"
 
 ## Stanford's CoreNLP
 ##
@@ -203,7 +196,7 @@ corenlp:
     type: ClusterIP
 
   application:
-    port: 9000
+    listenPort: 9000
 
   ## Additional corenlp container arguments
   ##
@@ -302,10 +295,19 @@ transcrobes:
     servicePort: 80
     type: ClusterIP
 
-  ## Port for the Django application to listen on
+  ## app config passed as env vars
   ##
   application:
-    port: 8000
+    ## Internal IP for transcrobes to listen on
+    ##
+    listenAddress: 0.0.0.0
+    ## Internal port for transcrobes to listen on
+    ##
+    listenPort: 8000
+    ## Number of gunicorn workers
+    ##
+    gunicornWorkers: 3
+
 
   ## Additional transcrobes container arguments
   ##

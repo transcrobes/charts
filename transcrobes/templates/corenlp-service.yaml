@@ -17,7 +17,7 @@ spec:
   - name: http
     port: {{ .Values.corenlp.service.servicePort }}
     protocol: TCP
-    targetPort: {{ .Values.corenlp.application.port }}
+    targetPort: {{ .Values.corenlp.application.listenPort }}
     # TODO: is the following necessary???
   {{- if .Values.corenlp.service.nodePort }}
     nodePort: {{ .Values.corenlp.service.nodePort }}

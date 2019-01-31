@@ -44,7 +44,7 @@ spec:
           imagePullPolicy: {{ .Values.transcrobes.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: {{ .Values.transcrobes.application.port }}
+              containerPort: {{ .Values.transcrobes.application.listenPort }}
               protocol: TCP
           livenessProbe:
             httpGet:
@@ -97,6 +97,13 @@ spec:
               value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.hskDict }}"
             - name: TRANSCROBES_SUBLEX_FREQ_PATH
               value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.sublexFreq }}"
+            - name: TRANSCROBES_GUNICORN_WORKERS
+              value: "{{ .Values.transcrobes.application.gunicornWorkers }}"
+            - name: TRANSCROBES_LISTEN_ADDRESS
+              value: "{{ .Values.transcrobes.application.listenAddress }}"
+            - name: TRANSCROBES_LISTEN_PORT
+              value: "{{ .Values.transcrobes.application.listenPort }}"
+
             {{- if .Values.transcrobes.debug }}
             - name: TRANSCROBES_DEBUG
               value: "True"

@@ -29,7 +29,7 @@ spec:
           imagePullPolicy: {{ .Values.ankrobes.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: {{ .Values.ankrobes.application.port }}
+              containerPort: {{ .Values.ankrobes.application.listenPort }}
               protocol: TCP
           livenessProbe:
             httpGet:
@@ -46,21 +46,24 @@ spec:
             {{- end }}
             - name: PYTHONUNBUFFERED  # MUST put or no logs printed to kube, but probably should be in values
               value: "0"
-            - name: ANKROBES_DATA_ROOT
+
+            # All these values are passed via Kubernetes/Helm
+            - name: ANKISYNCD_DB_HOST
+              value: "{{ .Values.postgresql.fullnameOverride }}"
+            - name: ANKISYNCD_DB_PORT
+              value: "5432"  # TODO: hard-coded for the moment
+            - name: ANKISYNCD_DB_NAME
+              value: "{{ .Values.postgresql.postgresqlDatabase }}"
+            - name: ANKISYNCD_DB_USER
+              value: "{{ .Values.postgresql.postgresqlUsername }}"
+            - name: ANKISYNCD_DB_PASSWORD
+              value: "{{ .Values.postgresql.postgresqlPassword }}"
+            - name: ANKISYNCD_HOST
+              value: "{{ .Values.ankrobes.application.listenAddress }}"
+            - name: ANKISYNCD_PORT
+              value: "{{ .Values.ankrobes.application.listenPort }}"
+            - name: ANKISYNCD_DATA_ROOT
               value: "{{ .Values.ankrobes.persistence.dataRoot }}"
-            - name: ANKROBES_HOST_LISTEN
-              value: "{{ .Values.ankrobes.hostListen }}"
-            - name: ANKROBES_HOST_PORT
-              value: "{{ .Values.ankrobes.hostPort }}"
-            - name: ANKROBES_AUTH_URL
-            {{- if .Values.transcrobes.authUrl }}
-              value: "{{ .Values.ankrobes.authUrl }}"
-            {{- else }}
-              value: http://{{ include "transcrobes.transcrobes.fullname" . }}/auth
-            {{- end }}
-            # TODO: not used
-            - name: TRANSCROBES_HOST
-              value: {{ include "transcrobes.transcrobes.fullname" . }}
 
       {{- if .Values.ankrobes.persistence.enabled }}
           volumeMounts:
