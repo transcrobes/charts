@@ -31,20 +31,20 @@ spec:
             - name: http
               containerPort: {{ .Values.ankrobes.application.listenPort }}
               protocol: TCP
-          livenessProbe:
-            httpGet:
-              path: /
-              port: http
-              periodSeconds: {{ .Values.ankrobes.readiness.periodSeconds }}
-              initialDelaySeconds: {{ .Values.ankrobes.readiness.initialDelaySeconds }}
-              timeoutSeconds: {{ .Values.ankrobes.readiness.timeoutSeconds }}
-          readinessProbe:
-            httpGet:
-              path: /
-              port: http
-              periodSeconds: {{ .Values.ankrobes.readiness.periodSeconds }}
-              initialDelaySeconds: {{ .Values.ankrobes.readiness.initialDelaySeconds }}
-              timeoutSeconds: {{ .Values.ankrobes.readiness.timeoutSeconds }}
+          # livenessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          #     periodSeconds: {{ .Values.ankrobes.readiness.periodSeconds }}
+          #     initialDelaySeconds: {{ .Values.ankrobes.readiness.initialDelaySeconds }}
+          #     timeoutSeconds: {{ .Values.ankrobes.readiness.timeoutSeconds }}
+          # readinessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          #     periodSeconds: {{ .Values.ankrobes.readiness.periodSeconds }}
+          #     initialDelaySeconds: {{ .Values.ankrobes.readiness.initialDelaySeconds }}
+          #     timeoutSeconds: {{ .Values.ankrobes.readiness.timeoutSeconds }}
           env:
             {{- range $key, $value := .Values.ankrobes.extraEnv }}
             - name: {{ $key }}

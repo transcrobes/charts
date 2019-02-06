@@ -71,8 +71,8 @@ ankrobes:
   ## ankrobes container image
   ##
   image:
-    repository: registry.gitlab.com/transcrobes/transcrobes/tc_ankrobes
-    tag: v0.0.2
+    repository: transcrobes/ankrobes-server
+    tag: 0.0.5
     pullPolicy: IfNotPresent
 
   ## Annotations to be added to ankrobes pods
@@ -146,16 +146,20 @@ ankrobes:
 
   ## Configuration for the liveness and readiness probes
   ## liveness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes
-  liveness:
-    periodSeconds: 15
-    initialDelaySeconds: 5
-    timeoutSeconds: 10
+  ## WARNING! Currently disabled
+  ##
+  # liveness:
+  #   periodSeconds: 60
+  #   initialDelaySeconds: 5
+  #   timeoutSeconds: 60
 
   ## readiness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes
-  readiness:
-    periodSeconds: 15
-    initialDelaySeconds: 5
-    timeoutSeconds: 10
+  ## WARNING! Currently disabled
+  ##
+  # readiness:
+  #   periodSeconds: 60
+  #   initialDelaySeconds: 5
+  #   timeoutSeconds: 60
 
   ## app config passed as env vars
   ##
@@ -269,8 +273,8 @@ transcrobes:
   ## transcrobes container image
   ##
   image:
-    repository: registry.gitlab.com/transcrobes/transcrobes/tc_transcrobes
-    tag: v0.0.2
+    repository: transcrobes/transcrobes
+    tag: 0.0.4
     pullPolicy: IfNotPresent
 
   ## Annotations to be added to transcrobes pods
@@ -295,17 +299,20 @@ transcrobes:
 
   ## Configuration for the liveness and readiness probes
   ## liveness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes
-  liveness:
-    initialDelaySeconds: 20
-    periodSeconds: 5
-    timeoutSeconds: 5
+  ## WARNING! Currently disabled
+  ##
+  # liveness:
+  #   periodSeconds: 60
+  #   initialDelaySeconds: 5
+  #   timeoutSeconds: 60
 
   ## readiness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes
-  readiness:
-    initialDelaySeconds: 20
-    periodSeconds: 5
-    timeoutSeconds: 5
-
+  ## WARNING! Currently disabled
+  ##
+  # readiness:
+  #   periodSeconds: 60
+  #   initialDelaySeconds: 5
+  #   timeoutSeconds: 60
 
   ## These are turned into env vars that are required for the Django app
   ##
@@ -359,7 +366,7 @@ transcrobes:
     listenPort: 8000
     ## Number of gunicorn workers
     ##
-    gunicornWorkers: 3
+    gunicornWorkers: 1
 
 
   ## Additional transcrobes container arguments
@@ -385,7 +392,7 @@ postgresql:
   ## Must override due to the postgresql.fullname and postgresql.master.fullname templates not working in our templates
   ## TODO: it is probably possible to do this properly with imports
   ##
-  fullnameOverride: tckpostgres
+  fullnameOverride: tcr-postgres
 
   ## Override of upstream pullPolicy
   ##
