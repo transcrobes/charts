@@ -1,22 +1,57 @@
 image: dtzar/helm-kubectl  # alpine image with the latest helm and kubectl
 
-pages:
-  stage: deploy
+variables:
+  RELEASE_SCRIPT: 'https://gitlab.com/transcrobes/utils/raw/master/release.py'
+  CHART_NAME: transcrobes
+  DEPLOY_DIR: public
+  CI_PAGES_URL: https://charts.transcrob.es  # remove when 11.8 is release
+
+stages:
+  - test
+  - build
+  - deploy
+
+test:
+  stage: test
   script:
     - helm init --client-only
-    - mkdir -p ./public
+    - helm lint ${CHART_NAME}
+  except:
+    - schedules
+
+pages:
+  stage: deploy
+
+  before_script:
+    - apk add python3
+    - pip3 install -r requirements.txt
+
+  script:
+    - helm init --client-only
+    - python3 publish_charts.py --base_url ${CI_PAGES_URL} --chart_name ${CHART_NAME} ${PRIVATE_TOKEN} ${DEPLOY_DIR}
     - "echo \"User-Agent: *\nDisallow: /\" > ./public/robots.txt"
-    - helm dependency update transcrobes/
-    - helm package transcrobes/
-    - helm repo index  --url https://charts.transcrob.es .
-    - mkdir -p public
-    - mv index.yaml public/
-    - mv transcrobes*.tgz public/
   artifacts:
     paths:
-      - public
+      - ${DEPLOY_DIR}
   only:
-    - master
+    - tags
+  except:
+    - schedules
+
+build:
+  stage: build
+  before_script:
+    - apk add python3
+    - pip3 install -r requirements.txt
+  script:
+    - python3 validate_chart_release.py
+    - helm init --client-only
+    - helm dependency update transcrobes/
+    - helm package transcrobes/
+    - wget $RELEASE_SCRIPT
+    - python3 release.py $PRIVATE_TOKEN transcrobes-?.?.?.tgz
+  only:
+    - tags
   except:
     - schedules
 

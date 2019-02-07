@@ -46,26 +46,6 @@ spec:
             - name: http
               containerPort: {{ .Values.transcrobes.application.listenPort }}
               protocol: TCP
-          # livenessProbe:
-          #   httpGet:
-          #     path: /hello
-          #     port: http
-          #     httpHeaders:
-          #       - name: Host
-          #         value: {{ include "transcrobes.transcrobes.fullname" . }}
-          #     periodSeconds: {{ .Values.transcrobes.liveness.periodSeconds }}
-          #     initialDelaySeconds: {{ .Values.transcrobes.liveness.initialDelaySeconds }}
-          #     timeoutSeconds: {{ .Values.transcrobes.liveness.timeoutSeconds }}
-          # readinessProbe:
-          #   httpGet:
-          #     path: /hello
-          #     port: http
-          #     httpHeaders:
-          #       - name: Host
-          #         value: {{ include "transcrobes.transcrobes.fullname" . }}
-          #     periodSeconds: {{ .Values.transcrobes.readiness.periodSeconds }}
-          #     initialDelaySeconds: {{ .Values.transcrobes.readiness.initialDelaySeconds }}
-          #     timeoutSeconds: {{ .Values.transcrobes.readiness.timeoutSeconds }}
           env:
             {{- range $key, $value := .Values.transcrobes.extraEnv }}
             - name: {{ $key }}
