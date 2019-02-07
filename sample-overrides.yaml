@@ -9,3 +9,9 @@ ankrobes:
   #ingress:
   #  tls:
   #    issuer: letsencrypt-prod
+
+#nginxingress:
+#  controller:
+#    service:
+#      nodePorts:
+#        https: yourPortNumber
