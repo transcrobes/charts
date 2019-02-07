@@ -72,7 +72,7 @@ ankrobes:
   ##
   image:
     repository: transcrobes/ankrobes-server
-    tag: 0.0.5
+    tag: 0.0.6
     pullPolicy: IfNotPresent
 
   ## Annotations to be added to ankrobes pods
@@ -274,7 +274,7 @@ transcrobes:
   ##
   image:
     repository: transcrobes/transcrobes
-    tag: 0.0.4
+    tag: 0.0.5
     pullPolicy: IfNotPresent
 
   ## Annotations to be added to transcrobes pods
