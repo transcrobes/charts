@@ -274,7 +274,7 @@ transcrobes:
   ##
   image:
     repository: transcrobes/transcrobes
-    tag: 0.0.5
+    tag: 0.0.6
     pullPolicy: IfNotPresent
 
   ## Annotations to be added to transcrobes pods
