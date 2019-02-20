@@ -4,7 +4,7 @@ variables:
   RELEASE_SCRIPT: 'https://gitlab.com/transcrobes/utils/raw/master/release.py'
   CHART_NAME: transcrobes
   DEPLOY_DIR: public
-  CI_PAGES_URL: https://charts.transcrob.es  # remove when 11.8 is release
+  CI_PAGES_URL: http://chartstest.melser.org  # remove when 11.8 is release
 
 stages:
   - test

@@ -1,0 +1,42 @@
+{{- if .Values.transcrobes.enabled -}}
+{{- $fullName := include "transcrobes.transcrobes.fullname" . -}}
+{{- $ingressSyncPath := .Values.transcrobes.noauthingress.syncPath -}}
+{{- $ingressMSyncPath := .Values.transcrobes.noauthingress.msyncPath -}}
+
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: {{ .Values.nginxingress.controller.ingressClass }}
+    certmanager.k8s.io/cluster-issuer: {{ .Values.transcrobes.noauthingress.tls.issuer }}
+    kubernetes.io/tls-acme: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: {{ .Values.transcrobes.noauthingress.maxBodySize }}
+  name: withoutauth
+  labels:
+    {{- include "transcrobes.transcrobes.labels" . | nindent 4 }}
+
+spec:
+{{- if .Values.transcrobes.noauthingress.tls.enabled }}
+  tls:
+    - hosts:
+      {{- range .Values.transcrobes.hosts }}
+        - {{ . }}
+      {{- end }}
+      secretName: {{ .Values.transcrobes.noauthingress.tls.secretName }}
+{{- end }}
+  rules:
+  {{- range .Values.transcrobes.hosts }}
+    - host: {{ . }}
+      http:
+        paths:
+          - path: {{ $ingressSyncPath }}
+            backend:
+              serviceName: {{ $fullName }}
+              servicePort: http
+          - path: {{ $ingressMSyncPath }}
+            backend:
+              serviceName: {{ $fullName }}
+              servicePort: http
+
+  {{- end }}
+{{- end }}

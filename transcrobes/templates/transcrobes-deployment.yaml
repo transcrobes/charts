@@ -63,33 +63,50 @@ spec:
               value: "{{ .Values.postgresql.fullnameOverride }}"
             - name: TRANSCROBES_PUBLIC_HOSTS  # this is poorly named as it includes non-public hosts
               value: {{ include "transcrobes.publichosts" . }},{{ include "transcrobes.transcrobes.fullname" . }},{{ include "transcrobes.transcrobes.reallyFullname" . }}
-            - name: TRANSCROBES_ANKROBES_HOST
-              value: {{ include "transcrobes.ankrobes.fullname" . }}
-            - name: TRANSCROBES_CORENLP_HOST
-              value: {{ include "transcrobes.corenlp.fullname" . }}
-            - name: TRANSCROBES_BING_SUBSCRIPTION_KEY
-              value: "{{ .Values.transcrobes.bingSubscriptionKey }}"
             - name: TRANSCROBES_SECRET_KEY
               value: "{{ .Values.transcrobes.secretKey }}"
-            - name: TRANSCROBES_CCCEDICT_PATH
-              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.ccCedict }}"
-            - name: TRANSCROBES_ABCEDICT_PATH
-              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.abCedict }}"
-            - name: TRANSCROBES_HSKDICT_PATH
-              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.hskDict }}"
-            - name: TRANSCROBES_SUBLEX_FREQ_PATH
-              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.sublexFreq }}"
             - name: TRANSCROBES_GUNICORN_WORKERS
               value: "{{ .Values.transcrobes.application.gunicornWorkers }}"
             - name: TRANSCROBES_LISTEN_ADDRESS
               value: "{{ .Values.transcrobes.application.listenAddress }}"
             - name: TRANSCROBES_LISTEN_PORT
               value: "{{ .Values.transcrobes.application.listenPort }}"
-
+            - name: TRANSCROBES_CORENLP_HOST_ZH
+              value: {{ include "transcrobes.corenlpZh.fullname" . }}
+            - name: TRANSCROBES_CORENLP_HOST_EN
+              value: {{ include "transcrobes.corenlpEn.fullname" . }}
             {{- if .Values.transcrobes.debug }}
             - name: TRANSCROBES_DEBUG
               value: "True"
             {{- end }}
+            - name: TRANSCROBES_BING_SUBSCRIPTION_KEY
+              value: "{{ .Values.transcrobes.bingSubscriptionKey }}"
+            - name: TRANSCROBES_BING_API_HOST
+              value: "{{ .Values.transcrobes.bingApiHost }}"
+            - name: TRANSCROBES_CC_CEDICT_PATH
+              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.ccCedict.path }}"
+            - name: TRANSCROBES_CC_CEDICT_INMEM
+              value: "{{ .Values.transcrobes.ccCedict.inmem }}"
+            - name: TRANSCROBES_ABC_ZH_EN_DICT_PATH
+              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.abcZhEnDict.path }}"
+            - name: TRANSCROBES_ABC_ZH_EN_DICT_INMEM
+              value: "{{ .Values.transcrobes.abcZhEnDict.inmem }}"
+            - name: TRANSCROBES_ABC_EN_ZH_DICT_PATH
+              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.abcEnZhDict.path }}"
+            - name: TRANSCROBES_ABC_EN_ZH_DICT_INMEM
+              value: "{{ .Values.transcrobes.abcEnZhDict.inmem }}"
+            - name: TRANSCROBES_HSK_LISTS_PATH
+              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.hskLists.path }}"
+            - name: TRANSCROBES_HSK_LISTS_INMEM
+              value: "{{ .Values.transcrobes.hskLists.inmem }}"
+            - name: TRANSCROBES_SUBTLEX_FREQ_PATH
+              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.subtlexFreq.path }}"
+            - name: TRANSCROBES_SUBTLEX_FREQ_INMEM
+              value: "{{ .Values.transcrobes.subtlexFreq.inmem }}"
+            - name: TRANSCROBES_CMU_DICT_PATH
+              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.cmuDict.path }}"
+            - name: TRANSCROBES_CMU_DICT_INMEM
+              value: "{{ .Values.transcrobes.cmuDict.inmem }}"
 
       {{- if .Values.transcrobes.persistence.enabled }}
           volumeMounts:

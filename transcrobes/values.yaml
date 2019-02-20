@@ -41,152 +41,21 @@ nginxingress:
       ##
       enableHttps: true  # TODO: this should be linked to the tls configs somehow
 
-## Anki 2 compatible sync server, with additions
+## Stanford's CoreNLP with Chinese model
 ##
-ankrobes:
-  ## If false, ankrobes will not be installed
-  ##
-  enabled: true
-
-  ## ankrobes container name
-  ##
-  name: ankrobes
-
-  ## Ingress related configuration for setting up the SSL ingress
-  ##
-  ingress:
-    path: /
-    tls:
-      enabled: true
-      secretName: "transcrobes-ankrobes-cert"
-      issuer: letsencrypt-staging
-
-    ## The max body size for requests, see http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
-    ## This needs to be at least as large as the largest request, and as Anki exchanges full, uncompressed databases,
-    ## this can be very large
-    ## WARNING: this settings equates to an effective limit on the maximum user database size
-    ##
-    maxBodySize: 50m
-
-  ## ankrobes container image
-  ##
-  image:
-    repository: transcrobes/ankrobes-server
-    tag: 0.0.6
-    pullPolicy: IfNotPresent
-
-  ## Annotations to be added to ankrobes pods
-  ##
-  podAnnotations: {}
-
-  ## Use a StatefulSet if replicaCount needs to be greater than 1 (see below)  # TODO: change this copy/paste message
-  ##
-  replicaCount: 1
-
-  ## Additional ankrobes container environment variable
-  ## For instance to add a http_proxy
-  ##
-  extraEnv: {}
-
-  ## Strategy
-  ##
-  strategy:
-    type: Recreate
-
-  ## publicly defined and accessible FQDN pointing to this kubernetes cluster
-  ##
-  hosts: ['ankrobes.example.com']  # TODO: work out how to force this value to be passed
-
-  ## TODO: document
-  service:
-    annotations: {}
-    labels: {}
-    clusterIP: ""
-
-    loadBalancerIP: ""
-    loadBalancerSourceRanges: []
-    servicePort: 80
-    type: ClusterIP
-
-  ## Additional ankrobes container arguments
-  ##
-  extraArgs: {}
-
-  ## The URL prefix at which the container can be accessed. Useful in the case the '-web.external-url' includes a slug
-  ## so that the various internal URLs are still able to access as they are in the default case.
-  ## (Optional)
-  prefixURL: ""
-
-  ## Persistent Volume Storage configuration.
-  ## ref: https://kubernetes.io/docs/user-guide/persistent-volumes
-  ##
-  persistence:
-    ## Enable Ankrobes persistence using Persistent Volume Claims.
-    ##
-    enabled: true
-    ## Persistent Volume Storage Class
-    ## If defined, storageClassName: <storageClass>
-    ## If set to "-", storageClassName: "", which disables dynamic provisioning
-    ## If undefined (the default) or set to null, no storageClassName spec is
-    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
-    ##   GKE, AWS & OpenStack)
-    ##
-    # storageClass: "-"
-
-    ## A manually managed Persistent Volume and Claim
-    ## Requires persistence.enabled: true
-    ## If defined, PVC must be created manually before volume will be bound
-    # existingClaim:
-
-    accessMode: ReadWriteOnce
-    size: 1Gi
-
-    # app config passed as env vars and used for volume mount
-    dataRoot: "/opt/ankrobes/collections"
-
-  ## Configuration for the liveness and readiness probes
-  ## liveness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes
-  ## WARNING! Currently disabled
-  ##
-  # liveness:
-  #   periodSeconds: 60
-  #   initialDelaySeconds: 5
-  #   timeoutSeconds: 60
-
-  ## readiness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes
-  ## WARNING! Currently disabled
-  ##
-  # readiness:
-  #   periodSeconds: 60
-  #   initialDelaySeconds: 5
-  #   timeoutSeconds: 60
-
-  ## app config passed as env vars
-  ##
-  application:
-    ## Internal IP for ankrobes server to listen on
-    ##
-    listenAddress: 0.0.0.0
-    ## Internal port for ankrobes server to listen on
-    ##
-    listenPort: 27701
-
-
-## Stanford's CoreNLP
-##
-corenlp:
+corenlpZh:
   ## If false, corenlp will not be installed
   ##
   enabled: true
 
   ## corenlp container name
   ##
-  name: corenlp
+  name: corenlp-zh
 
   ## corenlp container image
   ##
   image:
-    repository: transcrobes/corenlp-chinese
+    repository: antonmelser/corenlp-chinese
     tag: 3.9.2
     pullPolicy: IfNotPresent
 
@@ -234,6 +103,82 @@ corenlp:
 
   application:
     listenPort: 9000
+    queryTimeout: 30000
+    javaXmx: 1g
+
+  ## Additional corenlp container arguments
+  ##
+  extraArgs: {}
+
+  ## The URL prefix at which the container can be accessed. Useful in the case the '-web.external-url' includes a slug
+  ## so that the various internal URLs are still able to access as they are in the default case.
+  ## (Optional)
+  prefixURL: ""
+
+## Stanford's CoreNLP with the default English model
+##
+corenlpEn:
+  ## If false, corenlp will not be installed
+  ##
+  enabled: true
+
+  ## corenlp container name
+  ##
+  name: corenlp-en
+
+  ## corenlp container image
+  ##
+  image:
+    repository: antonmelser/corenlp-english
+    tag: 3.9.2
+    pullPolicy: IfNotPresent
+
+  ## Annotations to be added to corenlp pods
+  ##
+  podAnnotations: {}
+
+  ## Use a StatefulSet if replicaCount needs to be greater than 1 (see below)  # TODO: change this copy/paste message
+  ##
+  replicaCount: 1
+
+  ## Additional corenlp container environment variable
+  ## For instance to add a http_proxy
+  ##
+  extraEnv: {}
+
+  ## Strategy
+  ##
+  strategy:
+    type: Recreate
+
+  ## TODO: document
+  service:
+    annotations: {}
+    labels: {}
+    clusterIP: ""
+
+    loadBalancerIP: ""
+    loadBalancerSourceRanges: []
+    servicePort: 80
+    type: ClusterIP
+
+  ## Configuration for the liveness and readiness probes
+  ## liveness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes
+  liveness:
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 5
+
+  ## readiness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes
+  readiness:
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 5
+
+  application:
+    listenPort: 9000
+    queryTimeout: 30000
+    javaXmx: 300m
 
   ## Additional corenlp container arguments
   ##
@@ -245,6 +190,7 @@ corenlp:
   prefixURL: ""
 
 ## Django App providing the glue and intelligence between other services
+## and wrapping anki-sync-server for Anki 2+ client compatibility
 ##
 transcrobes:
   ## If false, transcrobes will not be installed
@@ -257,24 +203,37 @@ transcrobes:
 
   ## Ingress related configuration for setting up the SSL ingress
   ##
-  ingress:
+  authingress:
     path: /
     tls:
       enabled: true
       secretName: "transcrobes-transcrobes-cert"
       issuer: letsencrypt-staging
-
     ## The max body size for requests, see http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
-    ## This needs to be at least as large as the largest request, with the current clients this is still relatively
-    ## modest, though future needs might vary greatly
+    ## This needs to be at least as large as the largest request, and as Anki exchanges full, uncompressed databases,
+    ## this can be very large
     ##
     maxBodySize: 5m
+
+  noauthingress:
+    syncPath: /sync/
+    msyncPath: /msync/
+    tls:
+      enabled: true
+      secretName: "transcrobes-ankrobes-cert"
+      issuer: letsencrypt-staging
+    ## The max body size for requests, see http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
+    ## This needs to be at least as large as the largest request, and as Anki exchanges full, uncompressed databases,
+    ## this can be very large
+    ## WARNING: this settings equates to an effective limit on the maximum user database size
+    ##
+    maxBodySize: 50m
 
   ## transcrobes container image
   ##
   image:
-    repository: transcrobes/transcrobes
-    tag: 0.0.6
+    repository: antonmelser/transcrobes
+    tag: 0.0.7
     pullPolicy: IfNotPresent
 
   ## Annotations to be added to transcrobes pods
@@ -317,16 +276,31 @@ transcrobes:
   ## These are turned into env vars that are required for the Django app
   ##
   bingSubscriptionKey: "your_bing_subscription_key"
+  bingApiHost: 'api.cognitive.microsofttranslator.com'
   secretKey: 'not_a_very_good_secret'  # FIXME: do as a secret
   debug: true
 
   ## Files mounted into the dataRoot
   ## TODO: see notes in the persistence section above
   ##
-  ccCedict: 'data/cedict.txt'
-  abCedict: 'data/abcdict.txt'
-  hskDict: 'data/hsk{}.txt'
-  sublexFreq: 'data/subtlex-ch.utf8.txt'
+  ccCedict:
+    path: 'data/cedict.txt'
+    inmem: True
+  abcZhEnDict:
+    path: 'data/abc_zh_en_dict.txt'
+    inmem: True
+  abcEnZhDict:
+    path: 'data/abc_en_zh_dict.txt'
+    inmem: True
+  cmuDict:
+    path: 'data/cmudict-0.7b.txt'
+    inmem: True
+  hskLists:
+    path: 'data/hsk{}.txt'
+    inmem: True
+  subtlexFreq:
+    path: 'data/subtlex-ch.utf8.txt'
+    inmem: True
 
   ## Additional transcrobes container environment variable
   ## For instance to add a http_proxy
