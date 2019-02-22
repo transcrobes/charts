@@ -341,7 +341,9 @@ transcrobes:
     ## Number of gunicorn workers
     ##
     gunicornWorkers: 1
-
+    ## gunicorn process timeout, see http://docs.gunicorn.org/en/latest/settings.html#timeout
+    ##
+    gunicornTimeout: 120
 
   ## Additional transcrobes container arguments
   ##
