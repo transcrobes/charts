@@ -62,7 +62,7 @@ spec:
             - name: POSTGRES_HOST
               value: "{{ .Values.postgresql.fullnameOverride }}"
             - name: TRANSCROBES_PUBLIC_HOSTS  # this is poorly named as it includes non-public hosts
-              value: {{ include "transcrobes.publichosts" . }},{{ include "transcrobes.transcrobes.fullname" . }},{{ include "transcrobes.transcrobes.reallyFullname" . }}
+              value: {{ include "transcrobes.publichosts" . }},{{ include "transcrobes.transcrobes.fullname" . }},{{ include "transcrobes.transcrobes.reallyFullname" . }},{{ include "ankrobes.publichosts" . }},{{ include "transcrobes.ankrobes.fullname" . }},{{ include "transcrobes.ankrobes.reallyFullname" . }}
             - name: TRANSCROBES_SECRET_KEY
               value: "{{ .Values.transcrobes.secretKey }}"
             - name: TRANSCROBES_GUNICORN_WORKERS
@@ -85,30 +85,34 @@ spec:
               value: "{{ .Values.transcrobes.bingSubscriptionKey }}"
             - name: TRANSCROBES_BING_API_HOST
               value: "{{ .Values.transcrobes.bingApiHost }}"
-            - name: TRANSCROBES_CC_CEDICT_PATH
-              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.ccCedict.path }}"
-            - name: TRANSCROBES_CC_CEDICT_INMEM
-              value: "{{ .Values.transcrobes.ccCedict.inmem }}"
-            - name: TRANSCROBES_ABC_ZH_EN_DICT_PATH
-              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.abcZhEnDict.path }}"
-            - name: TRANSCROBES_ABC_ZH_EN_DICT_INMEM
-              value: "{{ .Values.transcrobes.abcZhEnDict.inmem }}"
-            - name: TRANSCROBES_ABC_EN_ZH_DICT_PATH
-              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.abcEnZhDict.path }}"
-            - name: TRANSCROBES_ABC_EN_ZH_DICT_INMEM
-              value: "{{ .Values.transcrobes.abcEnZhDict.inmem }}"
-            - name: TRANSCROBES_HSK_LISTS_PATH
-              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.hskLists.path }}"
-            - name: TRANSCROBES_HSK_LISTS_INMEM
-              value: "{{ .Values.transcrobes.hskLists.inmem }}"
-            - name: TRANSCROBES_SUBTLEX_FREQ_PATH
-              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.subtlexFreq.path }}"
-            - name: TRANSCROBES_SUBTLEX_FREQ_INMEM
-              value: "{{ .Values.transcrobes.subtlexFreq.inmem }}"
-            - name: TRANSCROBES_CMU_DICT_PATH
-              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.cmuDict.path }}"
-            - name: TRANSCROBES_CMU_DICT_INMEM
-              value: "{{ .Values.transcrobes.cmuDict.inmem }}"
+            - name: TRANSCROBES_ZH_EN_CEDICT_PATH
+              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.zhEnCedict.path }}"
+            - name: TRANSCROBES_ZH_EN_CEDICT_INMEM
+              value: "{{ .Values.transcrobes.zhEnCedict.inmem }}"
+            - name: TRANSCROBES_ZH_EN_ABC_DICT_PATH
+              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.zhEnAbcDict.path }}"
+            - name: TRANSCROBES_ZH_EN_ABC_DICT_INMEM
+              value: "{{ .Values.transcrobes.zhEnAbcDict.inmem }}"
+            - name: TRANSCROBES_EN_ZH_ABC_DICT_PATH
+              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.enZhAbcDict.path }}"
+            - name: TRANSCROBES_EN_ZH_ABC_DICT_INMEM
+              value: "{{ .Values.transcrobes.enZhAbcDict.inmem }}"
+            - name: TRANSCROBES_ZH_HSK_LISTS_PATH
+              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.zhHskLists.path }}"
+            - name: TRANSCROBES_ZH_HSK_LISTS_INMEM
+              value: "{{ .Values.transcrobes.zhHskLists.inmem }}"
+            - name: TRANSCROBES_ZH_SUBTLEX_FREQ_PATH
+              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.zhSubtlexFreq.path }}"
+            - name: TRANSCROBES_ZH_SUBTLEX_FREQ_INMEM
+              value: "{{ .Values.transcrobes.zhSubtlexFreq.inmem }}"
+            - name: TRANSCROBES_EN_SUBTLEX_FREQ_PATH
+              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.enSubtlexFreq.path }}"
+            - name: TRANSCROBES_EN_SUBTLEX_FREQ_INMEM
+              value: "{{ .Values.transcrobes.enSubtlexFreq.inmem }}"
+            - name: TRANSCROBES_EN_CMU_DICT_PATH
+              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.enCmuDict.path }}"
+            - name: TRANSCROBES_EN_CMU_DICT_INMEM
+              value: "{{ .Values.transcrobes.enCmuDict.inmem }}"
 
       {{- if .Values.transcrobes.persistence.enabled }}
           volumeMounts:

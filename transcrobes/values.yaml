@@ -79,14 +79,14 @@ corenlpZh:
 
   ## TODO: document
   service:
-    annotations: {}
-    labels: {}
-    clusterIP: ""
+    annotations: {}  # TODO: unused???
+    labels: {}  # TODO: unused???
+    clusterIP: ""  # TODO: unused???
 
-    loadBalancerIP: ""
-    loadBalancerSourceRanges: []
+    loadBalancerIP: ""  # TODO: unused???
+    loadBalancerSourceRanges: []  # TODO: unused???
     servicePort: 80
-    type: ClusterIP
+    type: ClusterIP  # TODO: unused???
 
   ## Configuration for the liveness and readiness probes
   ## liveness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes
@@ -189,6 +189,42 @@ corenlpEn:
   ## (Optional)
   prefixURL: ""
 
+## Ankrobes is served from the Transcrobes pods via django-wsgi but requires
+## clients to be routed to a single pod for many operations. By creating a service
+## and an ingress this can be ensured easily using only nginx-ingress
+ankrobes:
+  ## If false, ankrobes will not be activated
+  ##
+  enabled: true
+
+  ## ankrobes service name
+  ##
+  name: ankrobes
+
+  ## Ingress related configuration for setting up the SSL ingress
+  ##
+  ingress:
+    path: /
+    tls:
+      enabled: true
+      secretName: "transcrobes-ankrobes-cert"
+      issuer: letsencrypt-staging
+    ## The max body size for requests, see http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
+    ## This needs to be at least as large as the largest request, and as Anki exchanges full, uncompressed databases,
+    ## this can be very large
+    ##
+    maxBodySize: 50m
+
+  service:
+    servicePort: 80
+    annotations: {}
+    labels: {}
+
+  ## publicly defined and accessible FQDN pointing to this kubernetes cluster
+  ##
+  hosts: ['ankrobes.example.com']
+
+
 ## Django App providing the glue and intelligence between other services
 ## and wrapping anki-sync-server for Anki 2+ client compatibility
 ##
@@ -203,7 +239,7 @@ transcrobes:
 
   ## Ingress related configuration for setting up the SSL ingress
   ##
-  authingress:
+  ingress:
     path: /
     tls:
       enabled: true
@@ -214,20 +250,6 @@ transcrobes:
     ## this can be very large
     ##
     maxBodySize: 5m
-
-  noauthingress:
-    syncPath: /sync/
-    msyncPath: /msync/
-    tls:
-      enabled: true
-      secretName: "transcrobes-ankrobes-cert"
-      issuer: letsencrypt-staging
-    ## The max body size for requests, see http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
-    ## This needs to be at least as large as the largest request, and as Anki exchanges full, uncompressed databases,
-    ## this can be very large
-    ## WARNING: this settings equates to an effective limit on the maximum user database size
-    ##
-    maxBodySize: 50m
 
   ## transcrobes container image
   ##
@@ -260,18 +282,18 @@ transcrobes:
   ## liveness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes
   ## WARNING! Currently disabled
   ##
-  # liveness:
-  #   periodSeconds: 60
-  #   initialDelaySeconds: 5
-  #   timeoutSeconds: 60
+  liveness:
+    periodSeconds: 60
+    initialDelaySeconds: 5
+    timeoutSeconds: 60
 
   ## readiness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes
   ## WARNING! Currently disabled
   ##
-  # readiness:
-  #   periodSeconds: 60
-  #   initialDelaySeconds: 5
-  #   timeoutSeconds: 60
+  readiness:
+    periodSeconds: 60
+    initialDelaySeconds: 5
+    timeoutSeconds: 60
 
   ## These are turned into env vars that are required for the Django app
   ##
@@ -283,24 +305,28 @@ transcrobes:
   ## Files mounted into the dataRoot
   ## TODO: see notes in the persistence section above
   ##
-  ccCedict:
-    path: 'data/cedict.txt'
+  zhEnCedict:
+    path: 'data/zh_en_cedict.txt'
     inmem: True
-  abcZhEnDict:
-    path: 'data/abc_zh_en_dict.txt'
+  zhEnAbcDict:
+    path: 'data/zh_en_abc_dict.txt'
     inmem: True
-  abcEnZhDict:
-    path: 'data/abc_en_zh_dict.txt'
+  enZhAbcDict:
+    path: 'data/en_zh_abc_dict.txt'
     inmem: True
-  cmuDict:
-    path: 'data/cmudict-0.7b.txt'
+  enCmuDict:
+    path: 'data/en_cmudict-0.7b.txt'
     inmem: True
-  hskLists:
-    path: 'data/hsk{}.txt'
+  zhHskLists:
+    path: 'data/zh_hsk{}.txt'
     inmem: True
-  subtlexFreq:
-    path: 'data/subtlex-ch.utf8.txt'
+  zhSubtlexFreq:
+    path: 'data/zh_subtlex.utf8.txt'
     inmem: True
+  enSubtlexFreq:
+    path: 'data/en_subtlex-us.utf8.txt'
+    inmem: True
+
 
   ## Additional transcrobes container environment variable
   ## For instance to add a http_proxy

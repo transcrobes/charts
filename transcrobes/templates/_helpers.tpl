@@ -37,6 +37,16 @@ chart: {{ .Chart.Name }}-{{ .Chart.Version }}
 heritage: {{ .Release.Service }}
 {{- end -}}
 
+{{- define "transcrobes.ankrobes.labels" -}}
+{{ include "transcrobes.ankrobes.matchLabels" . }}
+{{ include "transcrobes.common.metaLabels" . }}
+{{- end -}}
+
+{{- define "transcrobes.ankrobes.matchLabels" -}}
+component: {{ .Values.ankrobes.name | quote }}
+{{ include "transcrobes.common.matchLabels" . }}
+{{- end -}}
+
 {{- define "transcrobes.corenlpZh.labels" -}}
 {{ include "transcrobes.corenlpZh.matchLabels" . }}
 {{ include "transcrobes.common.metaLabels" . }}
@@ -65,6 +75,35 @@ component: {{ .Values.corenlpEn.name | quote }}
 {{- define "transcrobes.transcrobes.matchLabels" -}}
 component: {{ .Values.transcrobes.name | quote }}
 {{ include "transcrobes.common.matchLabels" . }}
+{{- end -}}
+
+{{/*
+Create a fully qualified ankrobes name.
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+*/}}
+
+{{- define "transcrobes.ankrobes.fullname" -}}
+{{- if .Values.ankrobes.fullnameOverride -}}
+{{- .Values.ankrobes.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- $name := default .Chart.Name .Values.nameOverride -}}
+{{- if contains $name .Release.Name -}}
+{{- printf "%s-%s" .Release.Name .Values.ankrobes.name | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- printf "%s-%s-%s" .Release.Name $name .Values.ankrobes.name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Create the name of the service account to use for the ankrobes component
+*/}}
+{{- define "transcrobes.serviceAccountName.ankrobes" -}}
+{{- if .Values.serviceAccounts.ankrobes.create -}}
+    {{ default (include "transcrobes.ankrobes.fullname" .) .Values.serviceAccounts.ankrobes.name }}
+{{- else -}}
+    {{ default "default" .Values.serviceAccounts.ankrobes.name }}
+{{- end -}}
 {{- end -}}
 
 {{/*
@@ -149,11 +188,24 @@ Create the name of the service account to use for the corenlpEn component
 {{- end -}}
 {{- end -}}
 
+{{/*
+Other helper functions
+*/}}
+
 {{- define "transcrobes.publichosts" -}}
 {{- join "," .Values.transcrobes.hosts }}
 {{- end -}}
 
+{{- define "ankrobes.publichosts" -}}
+{{- join "," .Values.ankrobes.hosts }}
+{{- end -}}
+
 {{- define "transcrobes.transcrobes.reallyFullname" -}}
 {{- $fullname := include "transcrobes.transcrobes.fullname" . -}}
+{{- printf "%s.%s.%s" $fullname .Release.Namespace "svc.cluster.local" -}}
+{{- end -}}
+
+{{- define "transcrobes.ankrobes.reallyFullname" -}}
+{{- $fullname := include "transcrobes.ankrobes.fullname" . -}}
 {{- printf "%s.%s.%s" $fullname .Release.Namespace "svc.cluster.local" -}}
 {{- end -}}

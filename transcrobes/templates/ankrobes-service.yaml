@@ -1,0 +1,29 @@
+{{- if .Values.ankrobes.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+{{- if .Values.ankrobes.service.annotations }}
+  annotations:
+{{ toYaml .Values.ankrobes.service.annotations | indent 4 }}
+{{- end }}
+  labels:
+    {{- include "transcrobes.ankrobes.labels" . | nindent 4 }}
+{{- if .Values.ankrobes.service.labels }}
+{{ toYaml .Values.ankrobes.service.labels | indent 4 }}
+{{- end }}
+  name: {{ template "transcrobes.ankrobes.fullname" . }}
+spec:
+  affinity: ClientIP  # apparently this doesn't work when behind an ingress, I don't know how the ingress does its stuff either though...
+  ports:
+  - name: http
+    port: {{ .Values.ankrobes.service.servicePort }}
+    protocol: TCP
+    targetPort: {{ .Values.transcrobes.application.listenPort }}
+  {{- if .Values.transcrobes.service.nodePort }}
+    nodePort: {{ .Values.transcrobes.service.nodePort }}
+  {{- end }}
+  selector:
+    {{- include "transcrobes.transcrobes.matchLabels" . | nindent 4 }}
+status:
+  loadBalancer: {}
+{{- end }}
