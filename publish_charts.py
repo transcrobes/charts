@@ -66,7 +66,7 @@ def publish_charts(args):
         for sv in sorted_tags:
             try:
                 tag_desc = project.tags.get(str(sv)).release['description']
-                url_segment = re.search(f'.+\((\/uploads\/\w+\/{args.chart_name}-\d\.\d\.\d\.tgz)\)', tag_desc)[1]
+                url_segment = re.search(f'.+\((\/uploads\/\w+\/{args.chart_name}-\d+\.\d+\.\d+\.tgz)\)', tag_desc)[1]
             except:
                 logging.exception(f'Tag {sv} has an invalid description, stopping')
                 exit(1)

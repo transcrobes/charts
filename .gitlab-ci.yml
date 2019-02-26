@@ -49,7 +49,7 @@ build:
     - helm dependency update transcrobes/
     - helm package transcrobes/
     - wget $RELEASE_SCRIPT
-    - python3 release.py $PRIVATE_TOKEN transcrobes-?.?.?.tgz
+    - python3 release.py $PRIVATE_TOKEN transcrobes-*.*.*.tgz
   only:
     - tags
   except:
