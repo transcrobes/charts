@@ -204,11 +204,6 @@ ankrobes:
   ## Ingress related configuration for setting up the SSL ingress
   ##
   ingress:
-    path: /
-    tls:
-      enabled: true
-      secretName: "transcrobes-ankrobes-cert"
-      issuer: letsencrypt-staging
     ## The max body size for requests, see http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
     ## This needs to be at least as large as the largest request, and as Anki exchanges full, uncompressed databases,
     ## this can be very large
@@ -216,13 +211,14 @@ ankrobes:
     maxBodySize: 50m
 
   service:
-    servicePort: 80
     annotations: {}
     labels: {}
+    clusterIP: ""
 
-  ## publicly defined and accessible FQDN pointing to this kubernetes cluster
-  ##
-  hosts: ['ankrobes.example.com']
+    loadBalancerIP: ""
+    loadBalancerSourceRanges: []
+    servicePort: 80
+    type: ClusterIP
 
 
 ## Django App providing the glue and intelligence between other services

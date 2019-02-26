@@ -16,7 +16,7 @@ spec:
   affinity: ClientIP  # apparently this doesn't work when behind an ingress, I don't know how the ingress does its stuff either though...
   ports:
   - name: http
-    port: {{ .Values.ankrobes.service.servicePort }}
+    port: {{ .Values.transcrobes.service.servicePort }}
     protocol: TCP
     targetPort: {{ .Values.transcrobes.application.listenPort }}
   {{- if .Values.transcrobes.service.nodePort }}
