@@ -1,6 +1,6 @@
 name: transcrobes
 description: A Kubernetes Helm Chart for installing Transcrobes
-version: 0.0.11
+version: 0.0.12
 keywords:
   - Transcrobes
   - transcrob.es

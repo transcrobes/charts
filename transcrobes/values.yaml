@@ -250,7 +250,7 @@ transcrobes:
   ## transcrobes container image
   ##
   image:
-    repository: antonmelser/transcrobes
+    repository: transcrobes/transcrobes
     tag: 0.0.7
     pullPolicy: IfNotPresent
 
@@ -322,7 +322,6 @@ transcrobes:
   enSubtlexFreq:
     path: 'data/en_subtlex-us.utf8.txt'
     inmem: True
-
 
   ## Additional transcrobes container environment variable
   ## For instance to add a http_proxy
