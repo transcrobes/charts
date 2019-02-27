@@ -4,11 +4,6 @@ transcrobes:
   #ingress:
   #  tls:
   #    issuer: letsencrypt-prod
-ankrobes:
-  hosts: ['ankrobes.example.com']
-  #ingress:
-  #  tls:
-  #    issuer: letsencrypt-prod
 
 #nginxingress:
 #  controller:
