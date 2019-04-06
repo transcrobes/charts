@@ -33,8 +33,6 @@ pages:
   artifacts:
     paths:
       - ${DEPLOY_DIR}
-  only:
-    - tags
   except:
     - schedules
 
