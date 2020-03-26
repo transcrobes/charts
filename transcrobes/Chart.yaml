@@ -1,9 +1,26 @@
+apiVersion: v2
 name: transcrobes
 description: A Kubernetes Helm Chart for installing Transcrobes
-version: 0.0.12
+version: 0.0.13
 keywords:
   - Transcrobes
   - transcrob.es
 sources:
   - https://gitlab.com/transcrobes/charts
 home: https://transcrob.es
+icon: https://transcrob.es/img/tc128.png
+dependencies:
+  - name: postgresql
+    version: 8.6.x
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled
+    tags:
+      - transcrobes-database
+
+  - name: nginx-ingress
+    version: 1.34.x
+    alias: nginxingress  # because https://github.com/helm/helm/issues/2192
+    repository: https://kubernetes-charts.storage.googleapis.com
+    condition: nginx-ingress.enabled  # FIXME: this doesn't appear to work
+    tags:
+      - transcrobes-nginx

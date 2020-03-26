@@ -8,9 +8,8 @@ kind: Ingress
 metadata:
   annotations:
     kubernetes.io/ingress.class: {{ .Values.nginxingress.controller.ingressClass }}
-    certmanager.k8s.io/cluster-issuer: {{ .Values.transcrobes.ingress.tls.issuer }}
+    cert-manager.io/cluster-issuer: {{ .Values.transcrobes.ingress.tls.issuer }}
     nginx.ingress.kubernetes.io/proxy-body-size: {{ .Values.transcrobes.ingress.maxBodySize }}
-    kubernetes.io/tls-acme: "true"
     nginx.ingress.kubernetes.io/enable-cors: "true"
   name: {{ include "transcrobes.transcrobes.fullname" . }}
   labels:

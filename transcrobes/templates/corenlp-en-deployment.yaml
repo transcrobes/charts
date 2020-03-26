@@ -35,9 +35,9 @@ spec:
             httpGet:
               path: /
               port: http
-              periodSeconds: {{ .Values.corenlpEn.readiness.periodSeconds }}
-              initialDelaySeconds: {{ .Values.corenlpEn.readiness.initialDelaySeconds }}
-              timeoutSeconds: {{ .Values.corenlpEn.readiness.timeoutSeconds }}
+            timeoutSeconds: {{ .Values.corenlpEn.readiness.timeoutSeconds }}
+            periodSeconds: {{ .Values.corenlpEn.readiness.periodSeconds }}
+            initialDelaySeconds: {{ .Values.corenlpEn.readiness.initialDelaySeconds }}
           readinessProbe:
             exec:
               command:  # FIXME: this needs to be put into values probably to support different languages
@@ -47,9 +47,9 @@ spec:
                 - 'localhost:9000/?properties={"annotators":"lemma","outputFormat":"json"}'
                 -  '-O'
                 - '-'
-              periodSeconds: {{ .Values.corenlpEn.readiness.periodSeconds }}
-              initialDelaySeconds: {{ .Values.corenlpEn.readiness.initialDelaySeconds }}
-              timeoutSeconds: {{ .Values.corenlpEn.readiness.timeoutSeconds }}
+            timeoutSeconds: {{ .Values.corenlpEn.readiness.timeoutSeconds }}
+            periodSeconds: {{ .Values.corenlpEn.readiness.periodSeconds }}
+            initialDelaySeconds: {{ .Values.corenlpEn.readiness.initialDelaySeconds }}
           env:
             {{- range $key, $value := .Values.corenlpEn.extraEnv }}
             - name: {{ $key }}

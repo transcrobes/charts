@@ -23,7 +23,8 @@ fi
 
 echo "Checking for listening cert-manager issuer service NodePorts"
 
-listening_ports=$(kubectl get svc -o json | jq '.items[] | select (.spec.selector."certmanager.k8s.io/acme-http-domain") | .spec.ports[].nodePort')
+
+listening_ports=$(kubectl get svc -o json | jq '.items[] | select (.spec.selector."acme.cert-manager.io/http-domain") | .spec.ports[].nodePort')
 
 if [ -z "$listening_ports" ];
 then
@@ -38,7 +39,7 @@ fi
 for i in $listening_ports;
 do
     loop_count=0
-    node_port_exists=$(kubectl get svc -o json | (jq --arg MYPORT $i -r '.items[] | select (.spec.selector."certmanager.k8s.io/acme-http-domain") | .spec.ports[] | select (.nodePort == ($MYPORT | tonumber))'))
+    node_port_exists=$(kubectl get svc -o json | (jq --arg MYPORT $i -r '.items[] | select (.spec.selector."acme.cert-manager.io/http-domain") | .spec.ports[] | select (.nodePort == ($MYPORT | tonumber))'))
     until [ -z "$node_port_exists" ];
     do
         if [ -z "$socat_pid" ];
@@ -50,7 +51,7 @@ do
         loop_count=$((loop_count+1))
         echo "Sleeping for $SLEEP_BETWEEN_CHECKS before rechecking for port $i - check number $loop_count"
         sleep $SLEEP_BETWEEN_CHECKS  # sleep between loops to not overload the cluster
-        node_port_exists=$(kubectl get svc -o json | (jq --arg MYPORT $i -r '.items[] | select (.spec.selector."certmanager.k8s.io/acme-http-domain") | .spec.ports[] | select (.nodePort == ($MYPORT | tonumber))'))
+        node_port_exists=$(kubectl get svc -o json | (jq --arg MYPORT $i -r '.items[] | select (.spec.selector."acme.cert-manager.io/http-domain") | .spec.ports[] | select (.nodePort == ($MYPORT | tonumber))'))
         if [ -z "$node_port_exists" ];
         then
             echo "Looks like port $i is no longer listening, killing the socat pid $socat_pid"
