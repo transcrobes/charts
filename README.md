@@ -15,7 +15,7 @@ This chart bootstraps a [Transcrobes](https://transcrob.es) deployment on a [Kub
 
 ## Prerequisites
 ### Installation
-  - A publicly accessible Kubernetes 1.13 (may work on other versions but is currently untested)
+  - A publicly accessible Kubernetes 1.18 (may work on other versions but is currently untested)
 ### Working installation
   - Two separate, publicly available FQDNs pointing to your Kubernetes cluster. In the following examples these are `transcrobes.example.com` and `ankrobes.example.com`. Currently only `NodePort` is implemented but loadbalancer IPs will be supported soon.
   - A valid Microsoft Azure Cognitive services API token. Microsoft currently provides 2M characters (translations, dictionary lookups, etc.) free per month. This requires a valid credit card to set up but the default configuration will stop translating at 2M characters rather than start charging you. More details [here](https://azure.microsoft.com/en-us/pricing/details/cognitive-services/translator-text-api/).

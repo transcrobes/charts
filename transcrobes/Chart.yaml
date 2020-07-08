@@ -1,7 +1,7 @@
 apiVersion: v2
 name: transcrobes
 description: A Kubernetes Helm Chart for installing Transcrobes
-version: 0.0.13
+version: 0.0.14
 keywords:
   - Transcrobes
   - transcrob.es

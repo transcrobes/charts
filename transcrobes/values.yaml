@@ -55,8 +55,8 @@ corenlpZh:
   ## corenlp container image
   ##
   image:
-    repository: antonmelser/corenlp-chinese
-    tag: 3.9.2
+    repository: transcrobes/corenlp-chinese
+    tag: 4.0.0
     pullPolicy: IfNotPresent
 
   ## Annotations to be added to corenlp pods
@@ -129,8 +129,8 @@ corenlpEn:
   ## corenlp container image
   ##
   image:
-    repository: antonmelser/corenlp-english
-    tag: 3.9.2
+    repository: transcrobes/corenlp-english
+    tag: 4.0.0
     pullPolicy: IfNotPresent
 
   ## Annotations to be added to corenlp pods
@@ -251,7 +251,7 @@ transcrobes:
   ##
   image:
     repository: transcrobes/transcrobes
-    tag: 0.0.7
+    tag: 0.0.8
     pullPolicy: IfNotPresent
 
   ## Annotations to be added to transcrobes pods
