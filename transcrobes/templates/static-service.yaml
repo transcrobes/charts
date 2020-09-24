@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "transcrobes.transcrobes.fullname" . }}-static
+  labels:
+    {{- include "transcrobes.static.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.static.service.type }}
+  ports:
+    - port: {{ .Values.static.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "transcrobes.static.selectorLabels" . | nindent 4 }}

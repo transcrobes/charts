@@ -5,7 +5,14 @@ transcrobes:
   #  tls:
   #    issuer: letsencrypt-prod
 
-#nginxingress:
+certissuer:
+  prod:
+    email: anton@melser.org  # You MUST declare a valid email here, even for staging!
+  staging:
+    enabled: true
+    email: yourname@example.com  # You MUST declare a valid email here, even for staging!
+
+#ingress:
 #  controller:
 #    service:
 #      nodePorts:

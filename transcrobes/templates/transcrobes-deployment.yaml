@@ -53,16 +53,24 @@ spec:
             {{- end }}
             - name: PYTHONUNBUFFERED  # MUST put or no logs printed to kube, but probably should be in values
               value: "0"
-            - name: POSTGRES_USER
+            - name: TC_POSTGRES_USER
               value: "{{ .Values.postgresql.postgresqlUsername }}"
-            - name: POSTGRES_DATABASE
+            - name: TC_POSTGRES_DATABASE
               value: "{{ .Values.postgresql.postgresqlDatabase }}"
-            - name: POSTGRES_PASSWORD
+            - name: TC_POSTGRES_PASSWORD
               value: "{{ .Values.postgresql.postgresqlPassword }}"
-            - name: POSTGRES_HOST
+            - name: TC_POSTGRES_HOST
+              value: "{{ .Values.postgresql.fullnameOverride }}"
+            - name: TC_DJANKISERV_USERDB_USER
+              value: "{{ .Values.postgresql.postgresqlUsername }}"
+            - name: TC_DJANKISERV_USERDB_NAME
+              value: "{{ .Values.postgresql.postgresqlDatabase }}"
+            - name: TC_DJANKISERV_USERDB_PASSWORD
+              value: "{{ .Values.postgresql.postgresqlPassword }}"
+            - name: TC_DJANKISERV_USERDB_HOST
               value: "{{ .Values.postgresql.fullnameOverride }}"
             - name: TRANSCROBES_PUBLIC_HOSTS  # this is poorly named as it includes non-public hosts
-              value: {{ include "transcrobes.publichosts" . }},{{ include "transcrobes.transcrobes.fullname" . }},{{ include "transcrobes.transcrobes.reallyFullname" . }},{{ include "ankrobes.publichosts" . }},{{ include "transcrobes.ankrobes.fullname" . }},{{ include "transcrobes.ankrobes.reallyFullname" . }}
+              value: {{ include "transcrobes.publichosts" . }},{{ include "transcrobes.transcrobes.fullname" . }},{{ include "transcrobes.transcrobes.reallyFullname" . }}
             - name: TRANSCROBES_SECRET_KEY
               value: "{{ .Values.transcrobes.secretKey }}"
             - name: TRANSCROBES_GUNICORN_WORKERS
@@ -73,10 +81,8 @@ spec:
               value: "{{ .Values.transcrobes.application.listenAddress }}"
             - name: TRANSCROBES_LISTEN_PORT
               value: "{{ .Values.transcrobes.application.listenPort }}"
-            - name: TRANSCROBES_CORENLP_HOST_ZH
+            - name: TRANSCROBES_ZH_CORENLP_HOST
               value: {{ include "transcrobes.corenlpZh.fullname" . }}
-            - name: TRANSCROBES_CORENLP_HOST_EN
-              value: {{ include "transcrobes.corenlpEn.fullname" . }}
             {{- if .Values.transcrobes.debug }}
             - name: TRANSCROBES_DEBUG
               value: "True"
@@ -93,10 +99,6 @@ spec:
               value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.zhEnAbcDict.path }}"
             - name: TRANSCROBES_ZH_EN_ABC_DICT_INMEM
               value: "{{ .Values.transcrobes.zhEnAbcDict.inmem }}"
-            - name: TRANSCROBES_EN_ZH_ABC_DICT_PATH
-              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.enZhAbcDict.path }}"
-            - name: TRANSCROBES_EN_ZH_ABC_DICT_INMEM
-              value: "{{ .Values.transcrobes.enZhAbcDict.inmem }}"
             - name: TRANSCROBES_ZH_HSK_LISTS_PATH
               value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.zhHskLists.path }}"
             - name: TRANSCROBES_ZH_HSK_LISTS_INMEM
@@ -105,14 +107,6 @@ spec:
               value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.zhSubtlexFreq.path }}"
             - name: TRANSCROBES_ZH_SUBTLEX_FREQ_INMEM
               value: "{{ .Values.transcrobes.zhSubtlexFreq.inmem }}"
-            - name: TRANSCROBES_EN_SUBTLEX_FREQ_PATH
-              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.enSubtlexFreq.path }}"
-            - name: TRANSCROBES_EN_SUBTLEX_FREQ_INMEM
-              value: "{{ .Values.transcrobes.enSubtlexFreq.inmem }}"
-            - name: TRANSCROBES_EN_CMU_DICT_PATH
-              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.enCmuDict.path }}"
-            - name: TRANSCROBES_EN_CMU_DICT_INMEM
-              value: "{{ .Values.transcrobes.enCmuDict.inmem }}"
 
       {{- if .Values.transcrobes.persistence.enabled }}
           volumeMounts:

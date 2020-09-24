@@ -11,37 +11,73 @@ rbac:
 ##
 serviceAccounts:
   ankrobes:
-    create: true
-    name:
+    create: false
+    # name:
   corenlp:
-    create: true
-    name:
+    create: false
+    # name:
   transcrobes:
-    create: true
-    name:
+    create: false
+    # name:
 
-## Use the nginx-ingress chart dependency
-## aliased from nginx-ingress in requirements due to template limitations
+## You must replace these email addresses with your own.
+## Let's Encrypt will use this to contact you about expiring
+## certificates, and issues related to your account.
+certissuer:
+  prod:
+    name: letsencrypt-prod
+    enabled: false
+    privateKeySecretRef: transcrobes-le-key-prod
+  #   email: user@example.com  # You MUST declare a valid email here, even for staging!
+  staging:
+    name: letsencrypt-staging
+    enabled: false
+    privateKeySecretRef: transcrobes-le-key-staging
+  #   email: user@example.com  # You MUST declare a valid email here, even for staging!
+
+## Use the ingress-nginx chart dependency
+## aliased to ingress in requirements due to template limitations
 ##
-nginxingress:
+#
+
+ingress:
   enabled: true
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-dns-prod
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/proxy-body-size: 5m
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+  tls:
+    secretName: letsencrypt-cert-staging
+
   controller:
-    ## TODO: Currently only NodePort is supported, cloud provider LB support to come
+    ## TODO: Currently only NodePort or HostNetwork are supported, cloud provider LB support to come
     ##
     service:
-      type: NodePort
-      nodePorts:
-        ## Define a static NodePort so the cloud provider router can point to a known value
-        ##
-        https: 32443
-      ## Enable plain http. This won't work on most browsers, who won't get from an http api when the page is https
-      ##
-      enableHttp: false
-      ## Enable https.
-      ##
-      enableHttps: true  # TODO: this should be linked to the tls configs somehow
+      # ## Uncomment here to use NodePort. You will need to comment out from type: "" below
+      # type: NodePort
+      # nodePorts:
+      #   ## Define a static NodePort so the cloud provider router can point to a known value
+      #   ##
+      #   https: 32443
+      # ## Enable plain http. This won't work on most browsers, who won't get from an http api when the page is https
+      # ##
+      # enableHttp: false
+      # ## Enable https.
+      # ##
+      # enableHttps: true  # TODO: this should be linked to the tls configs somehow
 
-## Stanford's CoreNLP with Chinese model
+    ## direct access to the hosts ports 80 and 443
+    ## This is only really appropriate/useful for machines (VMs) that have a public IP (or public IP NAT)
+    ## and you are only hosting serving djankiserv on this kubernetes instance
+      type: ""
+    hostNetwork: true
+    kind: DaemonSet
+    dnsPolicy: ClusterFirstWithHostNet
+    ## end of HostNetwork ingress configuration
+
+## Stanford's CoreNLP with minimal Chinese model
 ##
 corenlpZh:
   ## If false, corenlp will not be installed
@@ -56,7 +92,7 @@ corenlpZh:
   ##
   image:
     repository: transcrobes/corenlp-chinese
-    tag: 4.0.0
+    tag: 4.1.0
     pullPolicy: IfNotPresent
 
   ## Annotations to be added to corenlp pods
@@ -101,10 +137,11 @@ corenlpZh:
     periodSeconds: 10
     timeoutSeconds: 5
 
+  ## java launch parameters
   application:
     listenPort: 9000
     queryTimeout: 30000
-    javaXmx: 1g
+    javaXmx: 800m
 
   ## Additional corenlp container arguments
   ##
@@ -115,114 +152,22 @@ corenlpZh:
   ## (Optional)
   prefixURL: ""
 
-## Stanford's CoreNLP with the default English model
-##
-corenlpEn:
-  ## If false, corenlp will not be installed
-  ##
+
+## Config related to the static files, currently only for the admin and Django Rest Framework API
+#
+static:
   enabled: true
-
-  ## corenlp container name
-  ##
-  name: corenlp-en
-
-  ## corenlp container image
-  ##
   image:
-    repository: transcrobes/corenlp-english
-    tag: 4.0.0
+    repository: transcrobes/transcrobes-static
     pullPolicy: IfNotPresent
-
-  ## Annotations to be added to corenlp pods
-  ##
-  podAnnotations: {}
-
-  ## Use a StatefulSet if replicaCount needs to be greater than 1 (see below)  # TODO: change this copy/paste message
-  ##
-  replicaCount: 1
-
-  ## Additional corenlp container environment variable
-  ## For instance to add a http_proxy
-  ##
-  extraEnv: {}
-
-  ## Strategy
-  ##
-  strategy:
-    type: Recreate
-
-  ## TODO: document
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: ""
+  listenPort: 80
   service:
-    annotations: {}
-    labels: {}
-    clusterIP: ""
-
-    loadBalancerIP: ""
-    loadBalancerSourceRanges: []
-    servicePort: 80
     type: ClusterIP
-
-  ## Configuration for the liveness and readiness probes
-  ## liveness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes
-  liveness:
-    initialDelaySeconds: 60
-    periodSeconds: 10
-    timeoutSeconds: 5
-
-  ## readiness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes
-  readiness:
-    initialDelaySeconds: 60
-    periodSeconds: 10
-    timeoutSeconds: 5
-
-  application:
-    listenPort: 9000
-    queryTimeout: 30000
-    javaXmx: 300m
-
-  ## Additional corenlp container arguments
-  ##
-  extraArgs: {}
-
-  ## The URL prefix at which the container can be accessed. Useful in the case the '-web.external-url' includes a slug
-  ## so that the various internal URLs are still able to access as they are in the default case.
-  ## (Optional)
-  prefixURL: ""
-
-## Ankrobes is served from the Transcrobes pods via django-wsgi but requires
-## clients to be routed to a single pod for many operations. By creating a service
-## and an ingress this can be ensured easily using only nginx-ingress
-ankrobes:
-  ## If false, ankrobes will not be activated
-  ##
-  enabled: true
-
-  ## ankrobes service name
-  ##
-  name: ankrobes
-
-  ## Ingress related configuration for setting up the SSL ingress
-  ##
-  ingress:
-    ## The max body size for requests, see http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
-    ## This needs to be at least as large as the largest request, and as Anki exchanges full, uncompressed databases,
-    ## this can be very large
-    ##
-    maxBodySize: 50m
-
-  service:
-    annotations: {}
-    labels: {}
-    clusterIP: ""
-
-    loadBalancerIP: ""
-    loadBalancerSourceRanges: []
-    servicePort: 80
-    type: ClusterIP
-
+    port: 80
 
 ## Django App providing the glue and intelligence between other services
-## and wrapping anki-sync-server for Anki 2+ client compatibility
 ##
 transcrobes:
   ## If false, transcrobes will not be installed
@@ -240,7 +185,7 @@ transcrobes:
     tls:
       enabled: true
       secretName: "transcrobes-transcrobes-cert"
-      issuer: letsencrypt-staging
+      issuer: letsencrypt-staging  # FIXME: I think this is no longer used
     ## The max body size for requests, see http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
     ## This needs to be at least as large as the largest request, and as Anki exchanges full, uncompressed databases,
     ## this can be very large
@@ -251,7 +196,7 @@ transcrobes:
   ##
   image:
     repository: transcrobes/transcrobes
-    tag: 0.0.8
+    tag: 0.0.9
     pullPolicy: IfNotPresent
 
   ## Annotations to be added to transcrobes pods
@@ -307,27 +252,17 @@ transcrobes:
   zhEnAbcDict:
     path: 'data/zh_en_abc_dict.txt'
     inmem: True
-  enZhAbcDict:
-    path: 'data/en_zh_abc_dict.txt'
-    inmem: True
-  enCmuDict:
-    path: 'data/en_cmudict-0.7b.txt'
-    inmem: True
   zhHskLists:
     path: 'data/zh_hsk{}.txt'
     inmem: True
   zhSubtlexFreq:
     path: 'data/zh_subtlex.utf8.txt'
     inmem: True
-  enSubtlexFreq:
-    path: 'data/en_subtlex-us.utf8.txt'
-    inmem: True
 
   ## Additional transcrobes container environment variable
   ## For instance to add a http_proxy
   ##
   extraEnv:
-    DJANGO_SETTINGS_MODULE: transcrobes.settings.container
     PYTHONDONTWRITEBYTECODE: "1"
 
   ## Strategy

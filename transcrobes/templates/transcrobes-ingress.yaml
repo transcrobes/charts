@@ -1,16 +1,15 @@
 {{- if .Values.transcrobes.enabled -}}
 {{- $fullName := include "transcrobes.transcrobes.fullname" . -}}
-{{- $ingressPath := .Values.transcrobes.ingress.path -}}
 {{- $servicePort := .Values.transcrobes.service.servicePort -}}
+{{- $staticSvcPort := .Values.static.service.port -}}
 {{- $reallyFullName := include "transcrobes.transcrobes.reallyFullname" . -}}
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
+  {{- with .Values.ingress.annotations }}
   annotations:
-    kubernetes.io/ingress.class: {{ .Values.nginxingress.controller.ingressClass }}
-    cert-manager.io/cluster-issuer: {{ .Values.transcrobes.ingress.tls.issuer }}
-    nginx.ingress.kubernetes.io/proxy-body-size: {{ .Values.transcrobes.ingress.maxBodySize }}
-    nginx.ingress.kubernetes.io/enable-cors: "true"
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   name: {{ include "transcrobes.transcrobes.fullname" . }}
   labels:
     {{- include "transcrobes.transcrobes.labels" . | nindent 4 }}
@@ -29,9 +28,19 @@ spec:
     - host: {{ . }}
       http:
         paths:
-          - path: {{ $ingressPath }}
+          - path: /static/
+            pathType: Prefix
             backend:
-              serviceName: {{ $fullName }}
-              servicePort: http
+              service:
+                name: {{ $fullName }}-static
+                port:
+                  number: {{ $staticSvcPort }}
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $fullName }}
+                port:
+                  number: {{ $servicePort }}
   {{- end }}
 {{- end }}
