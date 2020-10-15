@@ -153,7 +153,7 @@ corenlpZh:
   prefixURL: ""
 
 
-## Config related to the static files, currently only for the admin and Django Rest Framework API
+## Config related to the static files
 #
 static:
   enabled: true
@@ -380,3 +380,6 @@ postgresql:
   volumePermissions:
     image:
       pullPolicy: IfNotPresent
+
+kafka:
+  enabled: true

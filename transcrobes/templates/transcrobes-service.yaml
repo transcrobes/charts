@@ -13,12 +13,15 @@ metadata:
 {{- end }}
   name: {{ template "transcrobes.transcrobes.fullname" . }}
 spec:
+{{- if .Values.transcrobes.service.nodePort }}
+  type: NodePort
+{{- end }}
   ports:
   - name: http
     port: {{ .Values.transcrobes.service.servicePort }}
     protocol: TCP
     targetPort: {{ .Values.transcrobes.application.listenPort }}
-    # TODO: is the following necessary???
+    # TODO: This is only really useful for dev/testing
   {{- if .Values.transcrobes.service.nodePort }}
     nodePort: {{ .Values.transcrobes.service.nodePort }}
   {{- end }}

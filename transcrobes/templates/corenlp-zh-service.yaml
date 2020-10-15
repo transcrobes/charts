@@ -13,12 +13,15 @@ metadata:
 {{- end }}
   name: {{ template "transcrobes.corenlpZh.fullname" . }}
 spec:
+{{- if .Values.corenlpZh.service.nodePort }}
+  type: NodePort
+{{- end }}
   ports:
   - name: http
     port: {{ .Values.corenlpZh.service.servicePort }}
     protocol: TCP
     targetPort: {{ .Values.corenlpZh.application.listenPort }}
-    # TODO: is the following necessary???
+    # TODO: This is only really useful for dev/testing
   {{- if .Values.corenlpZh.service.nodePort }}
     nodePort: {{ .Values.corenlpZh.service.nodePort }}
   {{- end }}
