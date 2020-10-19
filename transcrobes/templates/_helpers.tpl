@@ -78,6 +78,31 @@ app.kubernetes.io/instance: {{ .Release.Name }}-static
 {{- end }}
 
 {{/*
+Common labels statsrunner
+*/}}
+{{- define "transcrobes.statsrunner.labels" -}}
+helm.sh/chart: {{ include "transcrobes.name" . }}
+{{ include "transcrobes.statsrunner.selectorLabels" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+
+{{/*
+Selector labels statsrunner
+*/}}
+{{- define "transcrobes.statsrunner.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "transcrobes.name" . }}-statsrunner
+app.kubernetes.io/instance: {{ .Release.Name }}-statsrunner
+{{- end }}
+
+{{- define "transcrobes.statsrunner.matchLabels" -}}
+component: {{ .Values.statsrunner.name | quote }}
+{{ include "transcrobes.common.matchLabels" . }}
+{{- end -}}
+
+{{/*
 Create a fully qualified transcrobes name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 */}}
@@ -132,6 +157,24 @@ Create the name of the service account to use for the corenlpZh component
     {{ default (include "transcrobes.corenlpZh.fullname" .) .Values.serviceAccounts.corenlpZh.name }}
 {{- else -}}
     {{ default "default" .Values.serviceAccounts.corenlpZh.name }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Create a fully qualified kafka name.
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+*/}}
+
+{{- define "transcrobes.kafka.fullname" -}}
+{{- if .Values.kafka.fullnameOverride -}}
+{{- .Values.kafka.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- $name := default .Chart.Name .Values.kafka.nameOverride -}}
+{{- if contains $name .Release.Name -}}
+{{- printf "%s-%s" .Release.Name .Values.kafka.name | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- printf "%s-%s-%s" .Release.Name $name .Values.kafka.name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
 {{- end -}}
 {{- end -}}
 

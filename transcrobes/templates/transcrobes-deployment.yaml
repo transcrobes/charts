@@ -25,7 +25,7 @@ spec:
     spec:
       initContainers:
         - name: check-db-ready
-          image: postgres:11
+          image: postgres:13
           command: ['sh', '-c',
             'until psql -c "select 1;";
             do echo waiting for database; sleep 2; done;']
@@ -107,6 +107,10 @@ spec:
               value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.zhSubtlexFreq.path }}"
             - name: TRANSCROBES_ZH_SUBTLEX_FREQ_INMEM
               value: "{{ .Values.transcrobes.zhSubtlexFreq.inmem }}"
+            {{- if .Values.kafka.enabled }}
+            - name: TRANSCROBES_KAFKA_BROKER
+              value: "{{ .Values.kafka.fullnameOverride }}"
+            {{- end }}
 
       {{- if .Values.transcrobes.persistence.enabled }}
           volumeMounts:

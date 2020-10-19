@@ -1,0 +1,86 @@
+{{- if .Values.statsrunner.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "transcrobes.transcrobes.fullname" . }}-statsrunner
+  labels:
+    {{- include "transcrobes.statsrunner.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.statsrunner.replicaCount }}
+  {{- if .Values.statsrunner.strategy }}
+  strategy:
+{{ toYaml .Values.statsrunner.strategy | indent 4 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "transcrobes.statsrunner.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+    {{- if .Values.statsrunner.podAnnotations }}
+      annotations:
+{{ toYaml .Values.statsrunner.podAnnotations | indent 8 }}
+    {{- end }}
+      labels:
+        {{- include "transcrobes.statsrunner.labels" . | nindent 8 }}
+    spec:
+      initContainers:
+        - name: check-db-ready
+          image: postgres:13
+          command: ['sh', '-c',
+            'until psql -c "select 1;";
+            do echo waiting for database; sleep 2; done;']
+          env:
+            - name: PGUSER
+              value: "{{ .Values.postgresql.postgresqlUsername }}"
+            - name: PGDATABASE
+              value: "{{ .Values.postgresql.postgresqlDatabase }}"
+            - name: PGPASSWORD
+              value: "{{ .Values.postgresql.postgresqlPassword }}"
+            - name: PGHOST
+              value: "{{ .Values.postgresql.fullnameOverride }}"
+      containers:
+        - name: {{ template "transcrobes.name" . }}-{{ .Values.statsrunner.name }}
+          image: "{{ .Values.transcrobes.image.repository }}:{{ .Values.transcrobes.image.tag }}"
+          imagePullPolicy: {{ .Values.transcrobes.image.pullPolicy }}
+          command: ["/bin/bash", "/app/scripts/runmanage.sh"]
+          args: ["vocab_stats"]
+          env:
+            {{- range $key, $value := .Values.statsrunner.extraEnv }}
+            - name: {{ $key }}
+              value: "{{ $value }}"
+            {{- end }}
+            {{- if .Values.statsrunner.debug }}
+            - name: TRANSCROBES_DEBUG
+              value: "True"
+            {{- end }}
+            - name: PYTHONUNBUFFERED  # MUST put or no logs printed to kube, but probably should be in values
+              value: "0"
+            - name: TC_POSTGRES_USER
+              value: "{{ .Values.postgresql.postgresqlUsername }}"
+            - name: TC_POSTGRES_DATABASE
+              value: "{{ .Values.postgresql.postgresqlDatabase }}"
+            - name: TC_POSTGRES_PASSWORD
+              value: "{{ .Values.postgresql.postgresqlPassword }}"
+            - name: TC_POSTGRES_HOST
+              value: "{{ .Values.postgresql.fullnameOverride }}"
+            - name: TC_DJANKISERV_USERDB_USER
+              value: "{{ .Values.postgresql.postgresqlUsername }}"
+            - name: TC_DJANKISERV_USERDB_NAME
+              value: "{{ .Values.postgresql.postgresqlDatabase }}"
+            - name: TC_DJANKISERV_USERDB_PASSWORD
+              value: "{{ .Values.postgresql.postgresqlPassword }}"
+            - name: TC_DJANKISERV_USERDB_HOST
+              value: "{{ .Values.postgresql.fullnameOverride }}"
+            - name: TRANSCROBES_SECRET_KEY
+              value: "{{ .Values.transcrobes.secretKey }}"
+            - name: TRANSCROBES_KAFKA_BROKER
+              value: "{{ .Values.kafka.fullnameOverride }}"
+            - name: TRANSCROBES_KAFKA_CONSUMER_TIMEOUT_MS
+              value: "{{ .Values.statsrunner.kafkaConnection.consumerTimeoutMs }}"
+            - name: TRANSCROBES_KAFKA_STATS_LOOP_SLEEP
+              value: "{{ .Values.statsrunner.kafkaConnection.statsLoopSleepSecs }}"
+            - name: TRANSCROBES_KAFKA_MAX_POLL_RECORDS
+              value: "{{ .Values.statsrunner.kafkaConnection.maxPollRecords }}"
+      restartPolicy: Always
+status: {}
+{{- end }}

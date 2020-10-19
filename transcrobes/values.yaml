@@ -381,5 +381,43 @@ postgresql:
     image:
       pullPolicy: IfNotPresent
 
+## Kafka for system user events
 kafka:
+  fullnameOverride: kafka
   enabled: true
+
+## Django managment command that consumes user events to update aggregated stats
+statsrunner:
+  name: statsrunner
+  enabled: true
+  debug: false
+
+  ## statsrunner container image
+  ## All the code is in the main transcrobes/transcrobes image
+  ## currently there is no way to use a different version of the image
+  ##
+
+  ## desc here FIXME:
+  #
+  kafkaConnection:
+    consumerTimeoutMs: 5000  # millisecs
+    statsLoopSleepSecs: 10  # secs
+    maxPollRecords: 500  # 500 is default
+
+  ## Number of statsrunners to launch, currently this has only been tested with one
+  ##
+  replicaCount: 1
+
+  ## Additional corenlp container environment variable
+  ## For instance to add a http_proxy
+  ##
+  extraEnv: {}
+
+  ## Strategy
+  ##
+  strategy:
+    type: Recreate
+
+  ## Annotations to be added to ankrobes pods
+  ##
+  podAnnotations: {}
