@@ -8,6 +8,7 @@ metadata:
 spec:
   accessModes:
   - {{ .Values.transcrobes.persistence.accessMode }}
+  storageClassName: {{ .Values.transcrobes.persistence.storageClassName }}
   resources:
     requests:
       storage: {{ .Values.transcrobes.persistence.size }}

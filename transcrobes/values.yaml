@@ -212,8 +212,9 @@ transcrobes:
   ##
   persistence:
     enabled: true
-    accessMode: ReadWriteOnce  # TODO: should be ReadOnlyMany to have multiple pods but how do we provision the files?
-    size: 1Gi
+    accessMode: ReadOnlyMany  # TODO: should be ReadOnlyMany to have multiple pods but how do we provision the files?
+    size: 10Gi
+    storageClassName: longhorn-nfs
 
     ## App config passed as env var and used for volume mount
     ##
@@ -374,7 +375,8 @@ postgresql:
     # existingClaim:
 
     accessMode: ReadWriteOnce
-    size: 1Gi
+
+    size: 10Gi
 
   ## Don't always pull image
   volumePermissions:
