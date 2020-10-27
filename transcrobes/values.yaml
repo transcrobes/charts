@@ -208,17 +208,19 @@ transcrobes:
   replicaCount: 1
 
   ## This persistence houses the static data files (dictionaries, wordlists) for the django service
-  ## TODO: these should be dealt with otherwise
+  ## and also the media files for djankiserv
+  ## TODO: these should both be dealt with otherwise, probably via object storage
   ##
   persistence:
     enabled: true
-    accessMode: ReadOnlyMany  # TODO: should be ReadOnlyMany to have multiple pods but how do we provision the files?
+    accessMode: ReadWriteMany
     size: 10Gi
     storageClassName: longhorn-nfs
 
     ## App config passed as env var and used for volume mount
     ##
     dataRoot: '/opt/transcrobes/'
+    mediaPath: 'media'
 
   ## Configuration for the liveness and readiness probes
   ## liveness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes

@@ -69,6 +69,8 @@ spec:
               value: "{{ .Values.postgresql.postgresqlPassword }}"
             - name: TC_DJANKISERV_USERDB_HOST
               value: "{{ .Values.postgresql.fullnameOverride }}"
+            - name: TRANSCROBES_DJANKISERV_DATA_ROOT
+              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.persistence.mediaPath }}"
             - name: TRANSCROBES_PUBLIC_HOSTS  # this is poorly named as it includes non-public hosts
               value: {{ include "transcrobes.publichosts" . }},{{ include "transcrobes.transcrobes.fullname" . }},{{ include "transcrobes.transcrobes.reallyFullname" . }}
             - name: TRANSCROBES_SECRET_KEY
