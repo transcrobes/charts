@@ -1,18 +1,13 @@
 ## Inspired by the default template made by helm create and https://github.com/helm/charts/tree/master/stable/prometheus
 
-## Use RBAC
-## TODO: this is not properly used yet and hasn't been tested outside of microk8s
-##
-rbac:
-  create: true
+commonAnnotations: {} # see https://github.com/bitnami/charts/tree/master/bitnami/common
+
+commonLabels: {} # see https://github.com/bitnami/charts/tree/master/bitnami/common
 
 ## Define serviceAccount names for components. Defaults to component's fully qualified name.
 ## TODO: these aren't used yet
 ##
 serviceAccounts:
-  ankrobes:
-    create: false
-    # name:
   corenlp:
     create: false
     # name:
@@ -37,13 +32,11 @@ certissuer:
 
 ## Use the ingress-nginx chart dependency
 ## aliased to ingress in requirements due to template limitations
-##
 #
-
 ingress:
   enabled: true
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-dns-prod
+    cert-manager.io/cluster-issuer: letsencrypt-staging
     kubernetes.io/ingress.class: nginx
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/proxy-body-size: 5m
@@ -52,6 +45,13 @@ ingress:
     secretName: letsencrypt-cert-staging
 
   controller:
+    ## Enable here for exposing metrics for prometheus
+    ##
+    metrics:
+      enabled: false
+      serviceMonitor:
+        enabled: false
+
     ## TODO: Currently only NodePort or HostNetwork are supported, cloud provider LB support to come
     ##
     service:
@@ -99,7 +99,11 @@ corenlpZh:
   ##
   podAnnotations: {}
 
-  ## Use a StatefulSet if replicaCount needs to be greater than 1 (see below)  # TODO: change this copy/paste message
+  ## Number of replicas of CoreNLP. CoreNLP takes at least 800MB of RAM for Chinese, even using a special,
+  ## reduced model that they (very nicely!) specially created for us, and is a huge consumer of CPU and
+  ## bandwidth. Best performance will probably have one of these everywhere, with the possible exception
+  ## of the master DB.
+  ## TODO: Maybe use taints somehow?
   ##
   replicaCount: 1
 
@@ -152,20 +156,25 @@ corenlpZh:
   ## (Optional)
   prefixURL: ""
 
-
-## Config related to the static files
+## Config related to the static files, uses https://github.com/bitnami/charts/tree/master/bitnami/nginx
+## so all upstream config can be used/overriden. The static resources are compiled into the image, which
+## is derived from the bitnami/nginx image
 #
 static:
   enabled: true
-  image:
-    repository: transcrobes/transcrobes-static
-    pullPolicy: IfNotPresent
-    # Overrides the image tag whose default is the chart appVersion.
-    tag: ""
-  listenPort: 80
   service:
     type: ClusterIP
-    port: 80
+  image:
+    repository: transcrobes/transcrobes-static
+    tag: 0.0.10
+
+  metrics:
+    enabled: false
+    serviceMonitor:
+      enabled: false
+      # namespace: monitoring
+      # selector:  # so the metrics get picked up with the default settings for kube-prometheus-stack
+      #   release: prometheus
 
 ## Django App providing the glue and intelligence between other services
 ##
@@ -196,26 +205,26 @@ transcrobes:
   ##
   image:
     repository: transcrobes/transcrobes
-    tag: 0.0.9
+    tag: 0.0.10
     pullPolicy: IfNotPresent
 
   ## Annotations to be added to transcrobes pods
   ##
   podAnnotations: {}
 
-  ## Use a StatefulSet if replicaCount needs to be greater than 1 (see below)  # TODO: change this copy/paste message
+  ## Number of instances of the main Django app. Should probably be one per node, or thereabouts
   ##
   replicaCount: 1
 
   ## This persistence houses the static data files (dictionaries, wordlists) for the django service
   ## and also the media files for djankiserv
-  ## TODO: these should both be dealt with otherwise, probably via object storage
+  ## TODO: these should eventually probably both be dealt with otherwise, like via object storage
   ##
   persistence:
     enabled: true
     accessMode: ReadWriteMany
     size: 10Gi
-    storageClassName: longhorn-nfs
+    # storageClassName: -  # something like longhorn-nfs is required
 
     ## App config passed as env var and used for volume mount
     ##
@@ -313,47 +322,74 @@ transcrobes:
   ## (Optional)
   prefixURL: ""
 
+  ## Prometheus exporter parameters
+  ##
+  metrics:
+    service:
+      port: 9123
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.transcrobes.metrics.service.port }}"
+    enabled: false
+    serviceMonitor:
+      enabled: false
+
+      ## Specify a namespace if needed
+      # namespace: monitoring
+      # selector:  # so the metrics get picked up with the default settings for kube-prometheus-stack
+      #   release: prometheus
+      # fallback to the prometheus default unless specified
+      # interval: 10s
+      # scrapeTimeout: 10s
+
 ## This section inspired by
 ## https://github.com/helm/charts/blob/cbd5e811a44c7bac6226b019f1d1810ef5ee45fa/stable/quassel/values.yaml
 ## Configuration values for the postgresql dependency.
 ## ref: https://github.com/kubernetes/charts/blob/master/stable/postgresql/README.md
 ##
-postgresql:
 
-  ## Use the PostgreSQL chart dependency.
-  ##
+pgha:
   enabled: true
+  ## Override of upstream pullPolicy
+  ##
+  postgresqlImage:
+    pullPolicy: IfNotPresent
 
   ## Must override due to the postgresql.fullname and postgresql.master.fullname templates not working in our templates
   ## TODO: it is probably possible to do this properly with imports
   ##
-  fullnameOverride: tcr-postgres
+  # fullnameOverride: tcr-postgres
 
-  ## Override of upstream pullPolicy
-  ##
-  image:
-    pullPolicy: IfNotPresent
+  # Needed because of a bug when specifying extendedConf
+  volumePermissions:
+    enabled: true
 
-  ## Annotations to be added to ankrobes pods
-  ##
-  podAnnotations: {}
+  postgresql:
+    ## Use the PostgreSQL chart dependency.
+    ##
+    enabled: true
 
-  ### PostgreSQL User to create.
-  ##
-  postgresqlUsername: postgres
+    ### PostgreSQL User to create.
+    ##
+    username: postgres
 
-  ## PostgreSQL Password for the new user.
-  ## If not set, a random 10 characters password will be used.
-  ##
-  postgresqlPassword: transpass
+    ## PostgreSQL Password for the new user.
+    ## If not set, a random 10 characters password will be used.
+    ##
+    password: transpass
+    repmgrPassword: transpass
 
-  ## PostgreSQL Database to create.
-  ##
-  postgresqlDatabase: transcrobes
+    ## PostgreSQL Database to create.
+    ##
+    database: transcrobes
 
-  ## PostgreSQL override parameters
-  ##
-  postgresqlExtendedConf: { "sharedBuffers": "128MB", "maxConnections": 300 }
+    ## PostgreSQL override parameters added to main config
+    ##
+    # extendedConf: { "sharedBuffers": "2GB" }
+
+    ## PostgreSQL max_connections parameter
+    ##
+    # maxConnections: 100
 
   ## Persistent Volume Storage configuration.
   ## ref: https://kubernetes.io/docs/user-guide/persistent-volumes
@@ -381,9 +417,8 @@ postgresql:
     size: 10Gi
 
   ## Don't always pull image
-  volumePermissions:
-    image:
-      pullPolicy: IfNotPresent
+  volumePermissionsImage:
+    pullPolicy: IfNotPresent
 
 ## Kafka for system user events
 kafka:

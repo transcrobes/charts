@@ -31,13 +31,14 @@ spec:
             do echo waiting for database; sleep 2; done;']
           env:
             - name: PGUSER
-              value: "{{ .Values.postgresql.postgresqlUsername }}"
+              value: "{{ .Values.pgha.postgresql.username }}"
             - name: PGDATABASE
-              value: "{{ .Values.postgresql.postgresqlDatabase }}"
+              value: "{{ .Values.pgha.postgresql.database }}"
             - name: PGPASSWORD
-              value: "{{ .Values.postgresql.postgresqlPassword }}"
+              value: "{{ .Values.pgha.postgresql.password }}"
             - name: PGHOST
-              value: "{{ .Values.postgresql.fullnameOverride }}"
+              value: "{{ .Release.Name }}-pgha-pgpool"
+
       containers:
         - name: {{ template "transcrobes.name" . }}-{{ .Values.statsrunner.name }}
           image: "{{ .Values.transcrobes.image.repository }}:{{ .Values.transcrobes.image.tag }}"
@@ -56,21 +57,21 @@ spec:
             - name: PYTHONUNBUFFERED  # MUST put or no logs printed to kube, but probably should be in values
               value: "0"
             - name: TC_POSTGRES_USER
-              value: "{{ .Values.postgresql.postgresqlUsername }}"
+              value: "{{ .Values.pgha.postgresql.username }}"
             - name: TC_POSTGRES_DATABASE
-              value: "{{ .Values.postgresql.postgresqlDatabase }}"
+              value: "{{ .Values.pgha.postgresql.database }}"
             - name: TC_POSTGRES_PASSWORD
-              value: "{{ .Values.postgresql.postgresqlPassword }}"
+              value: "{{ .Values.pgha.postgresql.password }}"
             - name: TC_POSTGRES_HOST
-              value: "{{ .Values.postgresql.fullnameOverride }}"
+              value: "{{ .Release.Name }}-pgha-pgpool"
             - name: TC_DJANKISERV_USERDB_USER
-              value: "{{ .Values.postgresql.postgresqlUsername }}"
+              value: "{{ .Values.pgha.postgresql.username }}"
             - name: TC_DJANKISERV_USERDB_NAME
-              value: "{{ .Values.postgresql.postgresqlDatabase }}"
+              value: "{{ .Values.pgha.postgresql.database }}"
             - name: TC_DJANKISERV_USERDB_PASSWORD
-              value: "{{ .Values.postgresql.postgresqlPassword }}"
+              value: "{{ .Values.pgha.postgresql.password }}"
             - name: TC_DJANKISERV_USERDB_HOST
-              value: "{{ .Values.postgresql.fullnameOverride }}"
+              value: "{{ .Release.Name }}-pgha-pgpool"
             - name: TRANSCROBES_SECRET_KEY
               value: "{{ .Values.transcrobes.secretKey }}"
             - name: TRANSCROBES_KAFKA_BROKER

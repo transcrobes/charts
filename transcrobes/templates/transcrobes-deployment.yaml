@@ -14,6 +14,7 @@ spec:
   selector:
     matchLabels:
       {{- include "transcrobes.transcrobes.matchLabels" . | nindent 6 }}
+      # release: prometheus
   template:
     metadata:
     {{- if .Values.transcrobes.podAnnotations }}
@@ -22,6 +23,7 @@ spec:
     {{- end }}
       labels:
         {{- include "transcrobes.transcrobes.labels" . | nindent 8 }}
+        # release: prometheus
     spec:
       initContainers:
         - name: check-db-ready
@@ -31,13 +33,13 @@ spec:
             do echo waiting for database; sleep 2; done;']
           env:
             - name: PGUSER
-              value: "{{ .Values.postgresql.postgresqlUsername }}"
+              value: "{{ .Values.pgha.postgresql.username }}"
             - name: PGDATABASE
-              value: "{{ .Values.postgresql.postgresqlDatabase }}"
+              value: "{{ .Values.pgha.postgresql.database }}"
             - name: PGPASSWORD
-              value: "{{ .Values.postgresql.postgresqlPassword }}"
+              value: "{{ .Values.pgha.postgresql.password }}"
             - name: PGHOST
-              value: "{{ .Values.postgresql.fullnameOverride }}"
+              value: "{{ .Release.Name }}-pgha-pgpool"
       containers:
         - name: {{ template "transcrobes.name" . }}-{{ .Values.transcrobes.name }}
           image: "{{ .Values.transcrobes.image.repository }}:{{ .Values.transcrobes.image.tag }}"
@@ -47,6 +49,24 @@ spec:
               containerPort: {{ .Values.transcrobes.application.listenPort }}
               protocol: TCP
           env:
+            - name: TRANSCROBES_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: TRANSCROBES_HOST_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+
+            - name: TRANSCROBES_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+
+            - name: TRANSCROBES_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
             {{- range $key, $value := .Values.transcrobes.extraEnv }}
             - name: {{ $key }}
               value: "{{ $value }}"
@@ -54,21 +74,21 @@ spec:
             - name: PYTHONUNBUFFERED  # MUST put or no logs printed to kube, but probably should be in values
               value: "0"
             - name: TC_POSTGRES_USER
-              value: "{{ .Values.postgresql.postgresqlUsername }}"
+              value: "{{ .Values.pgha.postgresql.username }}"
             - name: TC_POSTGRES_DATABASE
-              value: "{{ .Values.postgresql.postgresqlDatabase }}"
+              value: "{{ .Values.pgha.postgresql.database }}"
             - name: TC_POSTGRES_PASSWORD
-              value: "{{ .Values.postgresql.postgresqlPassword }}"
+              value: "{{ .Values.pgha.postgresql.password }}"
             - name: TC_POSTGRES_HOST
-              value: "{{ .Values.postgresql.fullnameOverride }}"
+              value: "{{ .Release.Name }}-pgha-pgpool"
             - name: TC_DJANKISERV_USERDB_USER
-              value: "{{ .Values.postgresql.postgresqlUsername }}"
+              value: "{{ .Values.pgha.postgresql.username }}"
             - name: TC_DJANKISERV_USERDB_NAME
-              value: "{{ .Values.postgresql.postgresqlDatabase }}"
+              value: "{{ .Values.pgha.postgresql.database }}"
             - name: TC_DJANKISERV_USERDB_PASSWORD
-              value: "{{ .Values.postgresql.postgresqlPassword }}"
+              value: "{{ .Values.pgha.postgresql.password }}"
             - name: TC_DJANKISERV_USERDB_HOST
-              value: "{{ .Values.postgresql.fullnameOverride }}"
+              value: "{{ .Release.Name }}-pgha-pgpool"
             - name: TRANSCROBES_DJANKISERV_DATA_ROOT
               value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.persistence.mediaPath }}"
             - name: TRANSCROBES_PUBLIC_HOSTS  # this is poorly named as it includes non-public hosts

@@ -32,7 +32,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: {{ $fullName }}-static
+                name: {{ $.Release.Name }}-static
                 port:
                   number: {{ $staticSvcPort }}
           - path: /
