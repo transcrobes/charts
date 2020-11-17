@@ -18,13 +18,31 @@ spec:
 {{- if .Values.transcrobes.ingress.tls.enabled }}
   tls:
     - hosts:
-      {{- range .Values.transcrobes.hosts }}
+        - {{ .Values.transcrobes.haHost }}
+      {{- range .Values.transcrobes.nodeHosts }}
         - {{ . }}
       {{- end }}
       secretName: {{ .Values.transcrobes.ingress.tls.secretName }}
 {{- end }}
   rules:
-  {{- range .Values.transcrobes.hosts }}
+    - host: {{ .Values.transcrobes.haHost }}
+      http:
+        paths:
+          - path: /static/
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $.Release.Name }}-static
+                port:
+                  number: {{ $staticSvcPort }}
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $fullName }}
+                port:
+                  number: {{ $servicePort }}
+  {{- range .Values.transcrobes.nodeHosts }}
     - host: {{ . }}
       http:
         paths:

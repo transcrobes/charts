@@ -302,7 +302,7 @@ transcrobes:
 
   ## the name users will use, will have multiple A-records associated with all the node hosts
   ##
-  haHosts: transcrobes.example.com
+  haHost: transcrobes.example.com
 
   ## TODO: document
   service:
