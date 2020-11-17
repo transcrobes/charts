@@ -44,7 +44,7 @@ spec:
           image: "{{ .Values.transcrobes.image.repository }}:{{ .Values.transcrobes.image.tag }}"
           imagePullPolicy: {{ .Values.transcrobes.image.pullPolicy }}
           command: ["/bin/bash", "/app/scripts/runmanage.sh"]
-          args: ["vocab_stats"]
+          args: ["stats_processor"]
           env:
             {{- range $key, $value := .Values.statsrunner.extraEnv }}
             - name: {{ $key }}

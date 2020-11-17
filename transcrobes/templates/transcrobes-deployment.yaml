@@ -49,6 +49,10 @@ spec:
               containerPort: {{ .Values.transcrobes.application.listenPort }}
               protocol: TCP
           env:
+            - name: TRANSCROBES_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
             - name: TRANSCROBES_POD_IP
               valueFrom:
                 fieldRef:
@@ -91,8 +95,12 @@ spec:
               value: "{{ .Release.Name }}-pgha-pgpool"
             - name: TRANSCROBES_DJANKISERV_DATA_ROOT
               value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.persistence.mediaPath }}"
-            - name: TRANSCROBES_PUBLIC_HOSTS  # this is poorly named as it includes non-public hosts
-              value: {{ include "transcrobes.publichosts" . }},{{ include "transcrobes.transcrobes.fullname" . }},{{ include "transcrobes.transcrobes.reallyFullname" . }}
+            - name: TRANSCROBES_SYSTEM_HOSTS
+              value: {{ include "transcrobes.transcrobes.fullname" . }},{{ include "transcrobes.transcrobes.reallyFullname" . }}
+            - name: TRANSCROBES_NODE_HOSTS
+              value: {{ include "transcrobes.nodeHosts" . }},
+            - name: TRANSCROBES_HA_HOST
+              value: "{{ .Values.transcrobes.haHost }}"
             - name: TRANSCROBES_SECRET_KEY
               value: "{{ .Values.transcrobes.secretKey }}"
             - name: TRANSCROBES_GUNICORN_WORKERS

@@ -253,7 +253,7 @@ transcrobes:
   bingSubscriptionKey: "your_bing_subscription_key"
   bingApiHost: 'api.cognitive.microsofttranslator.com'
   secretKey: 'not_a_very_good_secret'  # FIXME: do as a secret
-  debug: true
+  debug: false
 
   ## Files mounted into the dataRoot
   ## TODO: see notes in the persistence section above
@@ -277,14 +277,32 @@ transcrobes:
   extraEnv:
     PYTHONDONTWRITEBYTECODE: "1"
 
+    ## Mailgun and registration details. If you allow learner signups, this must be configured
+    ## Currently only
+    # TRANSCROBES_MAILGUN_API_KEY: your_mailgun_api_key
+    # TRANSCROBES_DEFAULT_FROM_EMAIL: your@email.com
+    # TRANSCROBES_SERVER_EMAIL: your@email.com
+    # TRANSCROBES_ACCOUNT_ACTIVATION_DAYS: 1
+    # TRANSCROBES_REGISTRATION_OPEN: false
+
+    ## JWT configs
+    ##
+    # TRANSCROBES_JWT_ACCESS_TOKEN_LIFETIME_MINS: 10
+    # TRANSCROBES_JWT_REFRESH_TOKEN_LIFETIME_DAYS: 1
+
   ## Strategy
   ##
   strategy:
-    type: Recreate
+    type: RollingUpdate
 
-  ## publicly defined and accessible FQDN pointing to this kubernetes cluster
+  ## Publicly defined and accessible FQDN pointing to this kubernetes cluster
+  ## Having a public host for each
   ##
-  hosts: ['transcrobes.example.com']
+  nodeHosts: ['tc1.example.com']  # one for each publicly configured node - TODO: investigate doing this automatically!
+
+  ## the name users will use, will have multiple A-records associated with all the node hosts
+  ##
+  haHosts: transcrobes.example.com
 
   ## TODO: document
   service:
@@ -447,8 +465,7 @@ statsrunner:
   ##
   replicaCount: 1
 
-  ## Additional corenlp container environment variable
-  ## For instance to add a http_proxy
+  ## Additional statsrunner container environment variable
   ##
   extraEnv: {}
 

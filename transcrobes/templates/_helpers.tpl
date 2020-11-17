@@ -182,8 +182,8 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 Other helper functions
 */}}
 
-{{- define "transcrobes.publichosts" -}}
-{{- join "," .Values.transcrobes.hosts }}
+{{- define "transcrobes.nodeHosts" -}}
+{{- join "," .Values.transcrobes.nodeHosts }}
 {{- end -}}
 
 {{- define "transcrobes.transcrobes.reallyFullname" -}}
