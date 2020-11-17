@@ -11,7 +11,7 @@ home: https://transcrob.es
 icon: https://transcrob.es/img/tc128.png
 dependencies:
   - name: postgresql-ha
-    version: 5.x.x
+    version: 6.x.x
     alias: pgha
     repository: https://charts.bitnami.com/bitnami
     condition: pgha.enabled
@@ -27,14 +27,14 @@ dependencies:
       - transcrobes-nginx
 
   - name: kafka
-    version: 11.x.x
+    version: 12.x.x
     repository: https://charts.bitnami.com/bitnami
     condition: kafka.enabled
     tags:
       - transcrobes-kafka
 
   - name: nginx
-    version: 7.x.x
+    version: 8.x.x
     alias: static
     repository: https://charts.bitnami.com/bitnami
     condition: static.enabled
@@ -42,5 +42,5 @@ dependencies:
       - transcrobes-static
 
   - name: common
-    version: 0.x.x
+    version: 1.x.x
     repository: https://charts.bitnami.com/bitnami
