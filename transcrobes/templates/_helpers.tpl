@@ -57,6 +57,18 @@ component: {{ .Values.transcrobes.name | quote }}
 {{ include "transcrobes.common.matchLabels" . }}
 {{- end -}}
 
+
+{{- define "transcrobes.asgi.labels" -}}
+{{ include "transcrobes.asgi.matchLabels" . }}
+{{ include "transcrobes.common.metaLabels" . }}
+{{- end -}}
+
+{{- define "transcrobes.asgi.matchLabels" -}}
+component: {{ .Values.asgi.name | quote }}
+{{ include "transcrobes.common.matchLabels" . }}
+{{- end -}}
+
+
 {{/*
 Common labels static
 */}}
@@ -74,7 +86,7 @@ Selector labels static
 */}}
 {{- define "transcrobes.static.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "transcrobes.name" . }}-static
-app.kubernetes.io/instance: {{ .Release.Name }}-static
+app.kubernetes.io/instance: {{ .Release.Name }}-asgi
 {{- end }}
 
 {{/*
@@ -99,6 +111,31 @@ app.kubernetes.io/instance: {{ .Release.Name }}-statsrunner
 
 {{- define "transcrobes.statsrunner.matchLabels" -}}
 component: {{ .Values.statsrunner.name | quote }}
+{{ include "transcrobes.common.matchLabels" . }}
+{{- end -}}
+
+{{/*
+Common labels importsrunner
+*/}}
+{{- define "transcrobes.importsrunner.labels" -}}
+helm.sh/chart: {{ include "transcrobes.name" . }}
+{{ include "transcrobes.importsrunner.selectorLabels" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+
+{{/*
+Selector labels importsrunner
+*/}}
+{{- define "transcrobes.importsrunner.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "transcrobes.name" . }}-importsrunner
+app.kubernetes.io/instance: {{ .Release.Name }}-importsrunner
+{{- end }}
+
+{{- define "transcrobes.importsrunner.matchLabels" -}}
+component: {{ .Values.importsrunner.name | quote }}
 {{ include "transcrobes.common.matchLabels" . }}
 {{- end -}}
 

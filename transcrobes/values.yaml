@@ -38,13 +38,19 @@ ingress:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-staging
     kubernetes.io/ingress.class: nginx
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/proxy-body-size: 5m
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"  # increased to 50m for the dbs
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600s"  # increased to 3600s for better websocket support
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600s"  # increased to 3600s for better websocket support
     nginx.ingress.kubernetes.io/enable-cors: "true"
   tls:
     secretName: letsencrypt-cert-staging
 
   controller:
+    config:
+      use-gzip: "true"
+      enable-brotli: "true"
+
     ## Enable here for exposing metrics for prometheus
     ##
     metrics:
@@ -70,7 +76,7 @@ ingress:
 
     ## direct access to the hosts ports 80 and 443
     ## This is only really appropriate/useful for machines (VMs) that have a public IP (or public IP NAT)
-    ## and you are only hosting serving djankiserv on this kubernetes instance
+    ## and you are only hosting serving transcrobes on this kubernetes instance
       type: ""
     hostNetwork: true
     kind: DaemonSet
@@ -92,7 +98,7 @@ corenlpZh:
   ##
   image:
     repository: transcrobes/corenlp-chinese
-    tag: 4.1.0
+    tag: 4.2.0
     pullPolicy: IfNotPresent
 
   ## Annotations to be added to corenlp pods
@@ -130,22 +136,30 @@ corenlpZh:
 
   ## Configuration for the liveness and readiness probes
   ## liveness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes
+  ## WARNING! These are high by default for a reason - when doing "large" chunks (> a few kbytes) it can take
+  ## many seconds, particularly when depparse is used. When the queue gets many real, large chunks to proceess
+  ## there can be many seconds before a readiness probe will get scheduled. This means if the timeout is too
+  ## low, the container will get killed just when it's doing its job
+  ##
   liveness:
     initialDelaySeconds: 60
-    periodSeconds: 10
-    timeoutSeconds: 5
+    periodSeconds: 60
+    timeoutSeconds: 30
 
   ## readiness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes
   readiness:
-    initialDelaySeconds: 60
-    periodSeconds: 10
-    timeoutSeconds: 5
+    initialDelaySeconds: 20
+    periodSeconds: 20
+    timeoutSeconds: 30
 
-  ## java launch parameters
+  ## CoreNLP java launch parameters, see
+  ## https://stanfordnlp.github.io/CoreNLP/corenlp-server.html#command-line-flags
+  ## for details. Only the below values are currently supported
   application:
     listenPort: 9000
-    queryTimeout: 30000
-    javaXmx: 800m
+    queryTimeoutMs: 60000
+    javaXmx: 1000m
+    coreNlpNbThreads: 4
 
   ## Additional corenlp container arguments
   ##
@@ -156,39 +170,27 @@ corenlpZh:
   ## (Optional)
   prefixURL: ""
 
-## Config related to the static files, uses https://github.com/bitnami/charts/tree/master/bitnami/nginx
-## so all upstream config can be used/overriden. The static resources are compiled into the image, which
-## is derived from the bitnami/nginx image
-#
-static:
-  enabled: true
-  service:
-    type: ClusterIP
-  image:
-    repository: transcrobes/transcrobes-static
-    tag: 0.0.10
 
-  metrics:
-    enabled: false
-    serviceMonitor:
-      enabled: false
-      # namespace: monitoring
-      # selector:  # so the metrics get picked up with the default settings for kube-prometheus-stack
-      #   release: prometheus
 
 ## Django App providing the glue and intelligence between other services
 ##
-transcrobes:
+asgi:
   ## If false, transcrobes will not be installed
   ##
   enabled: true
 
   ## transcrobes container name
   ##
-  name: transcrobes
+  name: transcrobes-asgi
+
+  ## Override DB host, set this if you don't
+  ## want to use the default, kubernetes postgresql
+  ##
+  # overrideDBHost: tck-pgha-postgresql
 
   ## Ingress related configuration for setting up the SSL ingress
   ##
+  # FIXME: I think this is no longer used. Or was it ever used???
   ingress:
     path: /
     tls:
@@ -198,15 +200,6 @@ transcrobes:
     ## The max body size for requests, see http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
     ## This needs to be at least as large as the largest request, and as Anki exchanges full, uncompressed databases,
     ## this can be very large
-    ##
-    maxBodySize: 5m
-
-  ## transcrobes container image
-  ##
-  image:
-    repository: transcrobes/transcrobes
-    tag: 0.0.10
-    pullPolicy: IfNotPresent
 
   ## Annotations to be added to transcrobes pods
   ##
@@ -217,13 +210,11 @@ transcrobes:
   replicaCount: 1
 
   ## This persistence houses the static data files (dictionaries, wordlists) for the django service
-  ## and also the media files for djankiserv
   ## TODO: these should eventually probably both be dealt with otherwise, like via object storage
   ##
   persistence:
     enabled: true
     accessMode: ReadWriteMany
-    size: 10Gi
     # storageClassName: -  # something like longhorn-nfs is required
 
     ## App config passed as env var and used for volume mount
@@ -257,19 +248,34 @@ transcrobes:
 
   ## Files mounted into the dataRoot
   ## TODO: see notes in the persistence section above
+  ## TODO: move this to memcached?
   ##
   zhEnCedict:
     path: 'data/zh_en_cedict.txt'
-    inmem: True
+    inmem: False
   zhEnAbcDict:
     path: 'data/zh_en_abc_dict.txt'
-    inmem: True
+    inmem: False
   zhHskLists:
     path: 'data/zh_hsk{}.txt'
-    inmem: True
+    inmem: False
   zhSubtlexFreq:
     path: 'data/zh_subtlex.utf8.txt'
-    inmem: True
+    inmem: False
+
+  ## Bing results are cached to the db, also cache in memory?
+  ## TODO: move this to memcached?
+  ##
+  bingTransliterator:
+    inmem: False
+  bingTranslator:
+    inmem: False
+
+  ## RxDB sync broadcast layer tech
+  ## In theory this can be postgres or kafka but the asyncpg driver is incompatible
+  ## with pgpool2, and the python broadcaster module doesn't currently support aiopg
+  ##
+  broadcasterMessagingLayer: kafka
 
   ## Additional transcrobes container environment variable
   ## For instance to add a http_proxy
@@ -330,6 +336,223 @@ transcrobes:
     ## gunicorn process timeout, see http://docs.gunicorn.org/en/latest/settings.html#timeout
     ##
     gunicornTimeout: 120
+    ## Should run as WSGI with normal gunicorn (False for or ASGI with uvicorn)
+    ##
+    wsgiProcess: false
+
+  ## Additional transcrobes container arguments
+  ##
+  extraArgs: {}
+
+  ## The URL prefix at which the container can be accessed. Useful in the case the '-web.external-url' includes a slug
+  ## so that the various internal URLs are still able to access as they are in the default case.
+  ## (Optional)
+  prefixURL: ""
+
+  ## Prometheus exporter parameters
+  ##
+  metrics:
+    service:
+      port: 9123
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.asgi.metrics.service.port }}"
+    enabled: false
+    serviceMonitor:
+      enabled: false
+
+      ## Specify a namespace if needed
+      # namespace: monitoring
+      # selector:  # so the metrics get picked up with the default settings for kube-prometheus-stack
+      #   release: prometheus
+      # fallback to the prometheus default unless specified
+      # interval: 10s
+      # scrapeTimeout: 10s
+
+
+## Django App providing the glue and intelligence between other services
+##
+transcrobes:
+  ## If false, transcrobes will not be installed
+  ##
+  enabled: true
+
+  ## transcrobes container name
+  ##
+  name: transcrobes
+
+  ## Override DB host, set this if you don't
+  ## want to use the default, kubernetes postgresql
+  ##
+  # overrideDBHost: tck-pgha-postgresql
+
+  ## Ingress related configuration for setting up the SSL ingress
+  ##
+  # FIXME: I think this is no longer used. Or was it ever used???
+  ingress:
+    path: /
+    tls:
+      enabled: true
+      secretName: "transcrobes-transcrobes-cert"
+      issuer: letsencrypt-staging  # FIXME: I think this is no longer used
+    ## The max body size for requests, see http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
+    ## This needs to be at least as large as the largest request, and as Anki exchanges full, uncompressed databases,
+    ## this can be very large
+    ##
+    ## FIXME: I think this is no longer used!!!???
+    # maxBodySize: 5m
+
+  ## transcrobes container image
+  ##
+  image:
+    repository: transcrobes/transcrobes
+    tag: 0.0.10
+    pullPolicy: IfNotPresent
+
+  ## Annotations to be added to transcrobes pods
+  ##
+  podAnnotations: {}
+
+  ## Number of instances of the main Django app. Should probably be one per node, or thereabouts
+  ##
+  replicaCount: 1
+
+  ## This persistence houses the static data files (dictionaries, wordlists) for the django service
+  ## TODO: these should eventually probably both be dealt with otherwise, like via object storage
+  ##
+  persistence:
+    enabled: true
+    accessMode: ReadWriteMany
+    size: 10Gi
+    # storageClassName: -  # something like longhorn-nfs is required
+
+    ## App config passed as env var and used for volume mount
+    ##
+    dataRoot: '/opt/transcrobes/'
+    mediaPath: 'media'
+
+  ## Configuration for the liveness and readiness probes
+  ## liveness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes
+  ## WARNING! Currently disabled
+  ##
+  liveness:
+    periodSeconds: 60
+    initialDelaySeconds: 5
+    timeoutSeconds: 60
+
+  ## readiness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes
+  ## WARNING! Currently disabled
+  ##
+  readiness:
+    periodSeconds: 60
+    initialDelaySeconds: 5
+    timeoutSeconds: 60
+
+  ## These are turned into env vars that are required for the Django app
+  ##
+  bingSubscriptionKey: "your_bing_subscription_key"
+  bingApiHost: 'api.cognitive.microsofttranslator.com'
+  secretKey: 'not_a_very_good_secret'  # FIXME: do as a secret
+  debug: false
+
+  ## Files mounted into the dataRoot
+  ## TODO: see notes in the persistence section above
+  ## TODO: move this to memcached?
+  ##
+  zhEnCedict:
+    path: 'data/zh_en_cedict.txt'
+    inmem: False
+  zhEnAbcDict:
+    path: 'data/zh_en_abc_dict.txt'
+    inmem: False
+  zhHskLists:
+    path: 'data/zh_hsk{}.txt'
+    inmem: False
+  zhSubtlexFreq:
+    path: 'data/zh_subtlex.utf8.txt'
+    inmem: False
+
+  ## Bing results are cached to the db, also cache in memory?
+  ## TODO: move this to memcached?
+  ##
+  bingTransliterator:
+    inmem: False
+  bingTranslator:
+    inmem: False
+
+  ## RxDB sync broadcast layer tech
+  ## In theory this can be postgres or kafka but the asyncpg driver is incompatible
+  ## with pgpool2, and the python broadcaster module doesn't currently support aiopg
+  ##
+  broadcasterMessagingLayer: kafka
+
+  ## Additional transcrobes container environment variable
+  ## For instance to add a http_proxy
+  ##
+  extraEnv:
+    PYTHONDONTWRITEBYTECODE: "1"
+
+    ## Mailgun and registration details. If you allow learner signups, this must be configured
+    ## Currently only
+    # TRANSCROBES_MAILGUN_API_KEY: your_mailgun_api_key
+    # TRANSCROBES_DEFAULT_FROM_EMAIL: your@email.com
+    # TRANSCROBES_SERVER_EMAIL: your@email.com
+    # TRANSCROBES_ACCOUNT_ACTIVATION_DAYS: 1
+    # TRANSCROBES_REGISTRATION_OPEN: false
+
+    ## JWT configs
+    ##
+    # TRANSCROBES_JWT_ACCESS_TOKEN_LIFETIME_MINS: 10
+    # TRANSCROBES_JWT_REFRESH_TOKEN_LIFETIME_DAYS: 1
+
+  ## Strategy
+  ##
+  strategy:
+    type: RollingUpdate
+
+  ## Publicly defined and accessible FQDN pointing to this kubernetes cluster
+  ## Having a public host for each
+  ##
+  nodeHosts: ['tc1.example.com']  # one for each publicly configured node - TODO: investigate doing this automatically!
+
+  ## the name users will use, will have multiple A-records associated with all the node hosts
+  ##
+  haHost: transcrobes.example.com
+
+  ## TODO: document
+  service:
+    annotations: {}
+    labels: {}
+    clusterIP: ""
+
+    loadBalancerIP: ""
+    loadBalancerSourceRanges: []
+    servicePort: 80
+    type: ClusterIP
+
+  ## app config passed as env vars
+  ##
+  application:
+    ## Internal IP for transcrobes to listen on
+    ##
+    listenAddress: 0.0.0.0
+    ## Internal port for transcrobes to listen on
+    ##
+    listenPort: 8000
+    ## Number of gunicorn workers
+    ##
+    gunicornWorkers: 1
+    ## gunicorn process timeout, see http://docs.gunicorn.org/en/latest/settings.html#timeout
+    ##
+    gunicornTimeout: 120
+    ## Should run as WSGI with normal gunicorn (False for or ASGI with uvicorn)
+    ##
+    wsgiProcess: true
+
+    imports:
+      ## maximum user list import file size in KB
+      ## nginx.ingress.kubernetes.io/proxy-body-size above might also need to be increased, if the below is larger
+      maxListImportSizeKB: 5120
 
   ## Additional transcrobes container arguments
   ##
@@ -372,11 +595,6 @@ pgha:
   ##
   postgresqlImage:
     pullPolicy: IfNotPresent
-
-  ## Must override due to the postgresql.fullname and postgresql.master.fullname templates not working in our templates
-  ## TODO: it is probably possible to do this properly with imports
-  ##
-  # fullnameOverride: tcr-postgres
 
   # Needed because of a bug when specifying extendedConf
   volumePermissions:
@@ -467,13 +685,51 @@ statsrunner:
 
   ## Additional statsrunner container environment variable
   ##
-  extraEnv: {}
+  extraEnv:
+    PYTHONDONTWRITEBYTECODE: "1"
 
-  ## Strategy
+  ## Strategy, do not change unless you know what the code actually does and know the risks
   ##
   strategy:
     type: Recreate
 
-  ## Annotations to be added to ankrobes pods
+  ## Annotations to be added to statsrunner pods
   ##
   podAnnotations: {}
+
+## Django managment command that consumes user imports and generates lists and enriched versions from texts and lists
+importsrunner:
+  name: importsrunner
+  enabled: true
+  debug: false
+
+  ## importsrunner container image
+  ## All the code is in the main transcrobes/transcrobes image
+  ## currently there is no way to use a different version of the image
+  ##
+
+  ## Number of importsrunners to launch, currently this has only been tested with one
+  ##
+  replicaCount: 1
+
+  ## Additional importsrunner container environment variable
+  ##
+  extraEnv:
+    PYTHONDONTWRITEBYTECODE: "1"
+
+    ## Import load settings, see the transcrobes settings.py for details
+    # TRANSCROBES_IMPORT_MAX_CONCURRENT_PARSER_QUERIES: 10
+
+  ## Strategy, do not change unless you know what the code actually does and know the risks
+  ##
+  strategy:
+    type: Recreate
+
+  ## Annotations to be added to importsrunner pods
+  ##
+  podAnnotations: {}
+
+  ## application specific configuration
+  application:
+    importParseChunkSizeBytes: 20000  # see transcrobes settings.py for comments
+    importDetectChunkSizeBytes: 5000

@@ -56,12 +56,13 @@ spec:
               value: {{ $value }}
             {{- end }}
             - name: CORENLP_TIMEOUT
-              value: "{{ .Values.corenlpZh.application.queryTimeout }}"
+              value: "{{ .Values.corenlpZh.application.queryTimeoutMs }}"
             - name: CORENLP_JAVA_XMX
               value: "{{ .Values.corenlpZh.application.javaXmx }}"
             - name: CORENLP_PORT
               value: "{{ .Values.corenlpZh.application.listenPort }}"
-
+            - name: CORENLP_THREADS
+              value: "{{ .Values.corenlpZh.application.coreNlpNbThreads }}"
       restartPolicy: Always
 status: {}
 {{- end }}

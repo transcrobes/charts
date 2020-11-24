@@ -1,28 +1,28 @@
-{{- if .Values.transcrobes.enabled -}}
+{{- if .Values.asgi.enabled -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "transcrobes.transcrobes.fullname" . }}
+  name: {{ include "transcrobes.transcrobes.fullname" . }}-asgi
   labels:
-    {{- include "transcrobes.transcrobes.labels" . | nindent 4 }}
+    {{- include "transcrobes.asgi.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.transcrobes.replicaCount }}
-  {{- if .Values.transcrobes.strategy }}
+  replicas: {{ .Values.asgi.replicaCount }}
+  {{- if .Values.asgi.strategy }}
   strategy:
-{{ toYaml .Values.transcrobes.strategy | indent 4 }}
+{{ toYaml .Values.asgi.strategy | indent 4 }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "transcrobes.transcrobes.matchLabels" . | nindent 6 }}
+      {{- include "transcrobes.asgi.matchLabels" . | nindent 6 }}
       # release: prometheus
   template:
     metadata:
-    {{- if .Values.transcrobes.podAnnotations }}
+    {{- if .Values.asgi.podAnnotations }}
       annotations:
-{{ toYaml .Values.transcrobes.podAnnotations | indent 8 }}
+{{ toYaml .Values.asgi.podAnnotations | indent 8 }}
     {{- end }}
       labels:
-        {{- include "transcrobes.transcrobes.labels" . | nindent 8 }}
+        {{- include "transcrobes.asgi.labels" . | nindent 8 }}
         # release: prometheus
     spec:
       initContainers:
@@ -39,15 +39,15 @@ spec:
             - name: PGPASSWORD
               value: "{{ .Values.pgha.postgresql.password }}"
             - name: PGHOST
-              value: {{ .Values.transcrobes.overrideDBHost | default (printf "%s-pgha-pgpool" .Release.Name) }}
+              value: {{ .Values.asgi.overrideDBHost | default (printf "%s-pgha-pgpool" .Release.Name) }}
 
       containers:
-        - name: {{ template "transcrobes.name" . }}-{{ .Values.transcrobes.name }}
+        - name: {{ template "transcrobes.name" . }}-{{ .Values.asgi.name }}
           image: "{{ .Values.transcrobes.image.repository }}:{{ .Values.transcrobes.image.tag }}"
           imagePullPolicy: {{ .Values.transcrobes.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: {{ .Values.transcrobes.application.listenPort }}
+              containerPort: {{ .Values.asgi.application.listenPort }}
               protocol: TCP
           env:
             - name: TRANSCROBES_NODE_NAME
@@ -72,7 +72,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-            {{- range $key, $value := .Values.transcrobes.extraEnv }}
+            {{- range $key, $value := .Values.asgi.extraEnv }}
             - name: {{ $key }}
               value: "{{ $value }}"
             {{- end }}
@@ -85,13 +85,11 @@ spec:
             - name: TC_POSTGRES_PASSWORD
               value: "{{ .Values.pgha.postgresql.password }}"
             - name: TC_POSTGRES_HOST
-              value: {{ .Values.transcrobes.overrideDBHost | default (printf "%s-pgha-pgpool" .Release.Name) }}
+              value: {{ .Values.asgi.overrideDBHost | default (printf "%s-pgha-pgpool" .Release.Name) }}
             - name: TRANSCROBES_MEDIA_ROOT
               value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.persistence.mediaPath }}"
             - name: TRANSCROBES_SYSTEM_HOSTS
               value: {{ include "transcrobes.transcrobes.fullname" . }},{{ include "transcrobes.transcrobes.reallyFullname" . }}
-            - name: TRANSCROBES_IMPORT_MAX_UPLOAD_SIZE_KB
-              value: "{{ .Values.transcrobes.application.imports.maxListImportSizeKB }}"
             - name: TRANSCROBES_NODE_HOSTS
               value: {{ include "transcrobes.nodeHosts" . }},
             - name: TRANSCROBES_HA_HOST
@@ -99,18 +97,16 @@ spec:
             - name: TRANSCROBES_SECRET_KEY
               value: "{{ .Values.transcrobes.secretKey }}"
             - name: TRANSCROBES_GUNICORN_WORKERS
-              value: "{{ .Values.transcrobes.application.gunicornWorkers }}"
+              value: "{{ .Values.asgi.application.gunicornWorkers }}"
             - name: TRANSCROBES_GUNICORN_TIMEOUT
-              value: "{{ .Values.transcrobes.application.gunicornTimeout }}"
+              value: "{{ .Values.asgi.application.gunicornTimeout }}"
             - name: TRANSCROBES_WSGI_PROCESS
-              value: "{{ .Values.transcrobes.application.wsgiProcess }}"
+              value: "{{ .Values.asgi.application.wsgiProcess }}"
             - name: TRANSCROBES_LISTEN_ADDRESS
-              value: "{{ .Values.transcrobes.application.listenAddress }}"
+              value: "{{ .Values.asgi.application.listenAddress }}"
             - name: TRANSCROBES_LISTEN_PORT
-              value: "{{ .Values.transcrobes.application.listenPort }}"
-            - name: TRANSCROBES_ZH_CORENLP_HOST
-              value: {{ include "transcrobes.corenlpZh.fullname" . }}
-            {{- if .Values.transcrobes.debug }}
+              value: "{{ .Values.asgi.application.listenPort }}"
+            {{- if .Values.asgi.debug }}
             - name: TRANSCROBES_DEBUG
               value: "True"
             {{- end }}
@@ -119,25 +115,25 @@ spec:
             - name: TRANSCROBES_BING_API_HOST
               value: "{{ .Values.transcrobes.bingApiHost }}"
             - name: TRANSCROBES_ZH_EN_CEDICT_PATH
-              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.zhEnCedict.path }}"
+              value: "{{ .Values.asgi.persistence.dataRoot }}{{ .Values.asgi.zhEnCedict.path }}"
             - name: TRANSCROBES_ZH_EN_CEDICT_INMEM
-              value: "{{ .Values.transcrobes.zhEnCedict.inmem }}"
+              value: "{{ .Values.asgi.zhEnCedict.inmem }}"
             - name: TRANSCROBES_ZH_EN_ABC_DICT_PATH
-              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.zhEnAbcDict.path }}"
+              value: "{{ .Values.asgi.persistence.dataRoot }}{{ .Values.asgi.zhEnAbcDict.path }}"
             - name: TRANSCROBES_ZH_EN_ABC_DICT_INMEM
-              value: "{{ .Values.transcrobes.zhEnAbcDict.inmem }}"
+              value: "{{ .Values.asgi.zhEnAbcDict.inmem }}"
             - name: TRANSCROBES_ZH_HSK_LISTS_PATH
-              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.zhHskLists.path }}"
+              value: "{{ .Values.asgi.persistence.dataRoot }}{{ .Values.asgi.zhHskLists.path }}"
             - name: TRANSCROBES_ZH_HSK_LISTS_INMEM
-              value: "{{ .Values.transcrobes.zhHskLists.inmem }}"
+              value: "{{ .Values.asgi.zhHskLists.inmem }}"
             - name: TRANSCROBES_BING_TRANSLATOR_INMEM
-              value: "{{ .Values.transcrobes.bingTranslator.inmem }}"
+              value: "{{ .Values.asgi.bingTranslator.inmem }}"
             - name: TRANSCROBES_BING_TRANSLITERATOR_INMEM
-              value: "{{ .Values.transcrobes.bingTransliterator.inmem }}"
+              value: "{{ .Values.asgi.bingTransliterator.inmem }}"
             - name: TRANSCROBES_ZH_SUBTLEX_FREQ_PATH
-              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.zhSubtlexFreq.path }}"
+              value: "{{ .Values.asgi.persistence.dataRoot }}{{ .Values.asgi.zhSubtlexFreq.path }}"
             - name: TRANSCROBES_ZH_SUBTLEX_FREQ_INMEM
-              value: "{{ .Values.transcrobes.zhSubtlexFreq.inmem }}"
+              value: "{{ .Values.asgi.zhSubtlexFreq.inmem }}"
             - name: TRANSCROBES_BROACASTER_MESSAGING_LAYER
               value: "{{ .Values.transcrobes.broadcasterMessagingLayer }}"
             {{- if .Values.kafka.enabled }}
@@ -145,7 +141,7 @@ spec:
               value: "{{ .Values.kafka.fullnameOverride }}"
             {{- end }}
 
-      {{- if .Values.transcrobes.persistence.enabled }}
+      {{- if .Values.asgi.persistence.enabled }}
           volumeMounts:
           - mountPath: "{{ .Values.transcrobes.persistence.dataRoot }}"
             name: {{ include "transcrobes.transcrobes.fullname" . }}

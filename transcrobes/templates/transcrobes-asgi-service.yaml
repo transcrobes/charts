@@ -1,0 +1,43 @@
+{{- if .Values.asgi.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+{{- if .Values.asgi.service.annotations }}
+  annotations:
+{{ toYaml .Values.asgi.service.annotations | indent 4 }}
+{{- end }}
+  labels:
+    {{- include "transcrobes.asgi.labels" . | nindent 4 }}
+    # FIXME: remove this or use it!
+    # {{- include "common.labels.standard" . | nindent 4 }}
+    # {{- if .Values.commonLabels }}
+    # {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    # {{- end }}
+
+{{- if .Values.asgi.service.labels }}
+{{ toYaml .Values.asgi.service.labels | indent 4 }}
+{{- end }}
+  name: {{ template "transcrobes.transcrobes.fullname" . }}-asgi
+spec:
+{{- if .Values.asgi.service.nodePort }}
+  type: NodePort
+{{- end }}
+  ports:
+  - name: http
+    port: {{ .Values.asgi.service.servicePort }}
+    protocol: TCP
+    targetPort: {{ .Values.asgi.application.listenPort }}
+    # TODO: This is only really useful for dev/testing
+  {{- if .Values.asgi.service.nodePort }}
+    nodePort: {{ .Values.asgi.service.nodePort }}
+  {{- end }}
+  {{- if .Values.asgi.metrics.enabled }}
+  - name: metrics
+    port: {{ .Values.asgi.metrics.service.port }}
+    targetPort: {{ .Values.asgi.application.listenPort }}
+  {{- end }}
+  selector:
+    {{- include "transcrobes.asgi.matchLabels" . | nindent 4 }}
+status:
+  loadBalancer: {}
+{{- end }}
