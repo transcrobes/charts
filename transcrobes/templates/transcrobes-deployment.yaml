@@ -45,6 +45,20 @@ spec:
         - name: {{ template "transcrobes.name" . }}-{{ .Values.transcrobes.name }}
           image: "{{ .Values.transcrobes.image.repository }}:{{ .Values.transcrobes.image.tag }}"
           imagePullPolicy: {{ .Values.transcrobes.image.pullPolicy }}
+          livenessProbe:
+            httpGet:
+              path: /hello
+              port: http
+            timeoutSeconds: {{ .Values.transcrobes.liveness.timeoutSeconds }}
+            periodSeconds: {{ .Values.transcrobes.liveness.periodSeconds }}
+            initialDelaySeconds: {{ .Values.transcrobes.liveness.initialDelaySeconds }}
+          readinessProbe:
+            httpGet:
+              path: /enrich/load_definitions_cache
+              port: http
+            timeoutSeconds: {{ .Values.transcrobes.readiness.timeoutSeconds }}
+            periodSeconds: {{ .Values.transcrobes.readiness.periodSeconds }}
+            initialDelaySeconds: {{ .Values.transcrobes.readiness.initialDelaySeconds }}
           ports:
             - name: http
               containerPort: {{ .Values.transcrobes.application.listenPort }}

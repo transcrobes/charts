@@ -35,9 +35,9 @@ spec:
             httpGet:
               path: /
               port: http
-            timeoutSeconds: {{ .Values.corenlpZh.readiness.timeoutSeconds }}
-            periodSeconds: {{ .Values.corenlpZh.readiness.periodSeconds }}
-            initialDelaySeconds: {{ .Values.corenlpZh.readiness.initialDelaySeconds }}
+            timeoutSeconds: {{ .Values.corenlpZh.liveness.timeoutSeconds }}
+            periodSeconds: {{ .Values.corenlpZh.liveness.periodSeconds }}
+            initialDelaySeconds: {{ .Values.corenlpZh.liveness.initialDelaySeconds }}
           readinessProbe:
             exec:
               command:  # FIXME: this needs to be put into values probably to support different languages

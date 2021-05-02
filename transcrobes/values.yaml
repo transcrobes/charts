@@ -224,7 +224,6 @@ asgi:
 
   ## Configuration for the liveness and readiness probes
   ## liveness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes
-  ## WARNING! Currently disabled
   ##
   liveness:
     periodSeconds: 60
@@ -232,7 +231,6 @@ asgi:
     timeoutSeconds: 60
 
   ## readiness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes
-  ## WARNING! Currently disabled
   ##
   readiness:
     periodSeconds: 60
@@ -433,7 +431,6 @@ transcrobes:
 
   ## Configuration for the liveness and readiness probes
   ## liveness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes
-  ## WARNING! Currently disabled
   ##
   liveness:
     periodSeconds: 60
@@ -441,7 +438,6 @@ transcrobes:
     timeoutSeconds: 60
 
   ## readiness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes
-  ## WARNING! Currently disabled
   ##
   readiness:
     periodSeconds: 60

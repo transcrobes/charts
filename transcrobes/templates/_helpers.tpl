@@ -70,26 +70,6 @@ component: {{ .Values.asgi.name | quote }}
 
 
 {{/*
-Common labels static
-*/}}
-{{- define "transcrobes.static.labels" -}}
-helm.sh/chart: {{ include "transcrobes.name" . }}
-{{ include "transcrobes.static.selectorLabels" . }}
-{{- if .Chart.AppVersion }}
-app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
-{{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- end }}
-
-{{/*
-Selector labels static
-*/}}
-{{- define "transcrobes.static.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "transcrobes.name" . }}-static
-app.kubernetes.io/instance: {{ .Release.Name }}-asgi
-{{- end }}
-
-{{/*
 Common labels statsrunner
 */}}
 {{- define "transcrobes.statsrunner.labels" -}}

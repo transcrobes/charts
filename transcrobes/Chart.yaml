@@ -1,7 +1,7 @@
 apiVersion: v2
 name: transcrobes
 description: A Kubernetes Helm Chart for installing Transcrobes
-version: 0.0.17
+version: 0.0.18
 keywords:
   - Transcrobes
   - transcrob.es
@@ -32,14 +32,6 @@ dependencies:
     condition: kafka.enabled
     tags:
       - transcrobes-kafka
-
-  - name: nginx
-    version: 8.x.x
-    alias: static
-    repository: https://charts.bitnami.com/bitnami
-    condition: static.enabled
-    tags:
-      - transcrobes-static
 
   - name: common
     version: 1.x.x
