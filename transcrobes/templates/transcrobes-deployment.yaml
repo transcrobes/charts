@@ -45,20 +45,47 @@ spec:
         - name: {{ template "transcrobes.name" . }}-{{ .Values.transcrobes.name }}
           image: "{{ .Values.transcrobes.image.repository }}:{{ .Values.transcrobes.image.tag }}"
           imagePullPolicy: {{ .Values.transcrobes.image.pullPolicy }}
+          {{ if not .Values.transcrobes.application.useGunicorn }}command: ['/start-uvicorn.sh']{{ end }}
+
           livenessProbe:
             httpGet:
-              path: /hello
+              path: /api/v1/utils/hello
               port: http
+              httpHeaders:
+                - name: Host
+                  value: "{{ .Values.transcrobes.haHost }}"
             timeoutSeconds: {{ .Values.transcrobes.liveness.timeoutSeconds }}
             periodSeconds: {{ .Values.transcrobes.liveness.periodSeconds }}
             initialDelaySeconds: {{ .Values.transcrobes.liveness.initialDelaySeconds }}
-          readinessProbe:
+            failureThreshold: {{ .Values.transcrobes.liveness.failureThreshold }}
+
+          # readinessProbe:
+          #   httpGet:
+          #     path: /api/v1/enrich/load_definitions_cache
+          #     port: http
+          #     httpHeaders:
+          #       - name: Host
+          #         value: "{{ .Values.transcrobes.haHost }}"
+          #   timeoutSeconds: {{ .Values.transcrobes.readiness.timeoutSeconds }}
+          #   periodSeconds: {{ .Values.transcrobes.readiness.periodSeconds }}
+          #   initialDelaySeconds: {{ .Values.transcrobes.readiness.initialDelaySeconds }}
+          #   failureThreshold: {{ .Values.transcrobes.readiness.failureThreshold }}
+          #   successThreshold: {{ .Values.transcrobes.readiness.successThreshold }}
+
+          startupProbe:
             httpGet:
-              path: /enrich/load_definitions_cache
+              host:
+              scheme: HTTP
               port: http
-            timeoutSeconds: {{ .Values.transcrobes.readiness.timeoutSeconds }}
-            periodSeconds: {{ .Values.transcrobes.readiness.periodSeconds }}
-            initialDelaySeconds: {{ .Values.transcrobes.readiness.initialDelaySeconds }}
+              path: /api/v1/enrich/load_definitions_cache
+              httpHeaders:
+                - name: Host
+                  value: "{{ .Values.transcrobes.haHost }}"
+            timeoutSeconds: {{ .Values.transcrobes.startup.timeoutSeconds }}
+            periodSeconds: {{ .Values.transcrobes.startup.periodSeconds }}
+            initialDelaySeconds: {{ .Values.transcrobes.startup.initialDelaySeconds }}
+            failureThreshold: {{ .Values.transcrobes.startup.failureThreshold }}
+
           ports:
             - name: http
               containerPort: {{ .Values.transcrobes.application.listenPort }}
@@ -92,70 +119,118 @@ spec:
             {{- end }}
             - name: PYTHONUNBUFFERED  # MUST put or no logs printed to kube, but probably should be in values
               value: "0"
-            - name: TC_POSTGRES_USER
+            - name: POSTGRES_USER
               value: "{{ .Values.pgha.postgresql.username }}"
-            - name: TC_POSTGRES_DATABASE
+            - name: POSTGRES_DB
               value: "{{ .Values.pgha.postgresql.database }}"
-            - name: TC_POSTGRES_PASSWORD
+            - name: POSTGRES_PASSWORD
               value: "{{ .Values.pgha.postgresql.password }}"
-            - name: TC_POSTGRES_HOST
+            - name: POSTGRES_SERVER
               value: {{ .Values.transcrobes.overrideDBHost | default (printf "%s-pgha-pgpool" .Release.Name) }}
-            - name: TRANSCROBES_MEDIA_ROOT
+            - name: POSTGRES_PORT
+              value: "{{ .Values.pgha.service.port }}"
+            - name: MEDIA_ROOT
               value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.persistence.mediaPath }}"
-            - name: TRANSCROBES_SYSTEM_HOSTS
+            - name: SYSTEM_HOSTS
               value: {{ include "transcrobes.transcrobes.fullname" . }},{{ include "transcrobes.transcrobes.reallyFullname" . }}
-            - name: TRANSCROBES_IMPORT_MAX_UPLOAD_SIZE_KB
+            - name: IMPORT_MAX_UPLOAD_SIZE_KB
               value: "{{ .Values.transcrobes.application.imports.maxListImportSizeKB }}"
-            - name: TRANSCROBES_NODE_HOSTS
+            - name: NODE_HOSTS
               value: {{ include "transcrobes.nodeHosts" . }},
-            - name: TRANSCROBES_HA_HOST
+            - name: SERVER_NAME
+              value: {{ include "transcrobes.transcrobes.reallyFullname" . }}
+            - name: HA_HOST
               value: "{{ .Values.transcrobes.haHost }}"
-            - name: TRANSCROBES_SECRET_KEY
+            - name: SERVER_HOST
+              value: "http{{ if .Values.transcrobes.ingress.tls.enabled }}s{{ end }}://{{ .Values.transcrobes.haHost }}"
+            - name: SECRET_KEY
               value: "{{ .Values.transcrobes.secretKey }}"
-            - name: TRANSCROBES_GUNICORN_WORKERS
-              value: "{{ .Values.transcrobes.application.gunicornWorkers }}"
-            - name: TRANSCROBES_GUNICORN_TIMEOUT
+            {{- if gt .Values.transcrobes.application.webConcurrency 0.0 }}
+            - name: WEB_CONCURRENCY
+              value: "{{ .Values.transcrobes.application.webConcurrency }}"
+            {{ else }}
+            - name: MAX_WORKERS
+              value: "{{ .Values.transcrobes.application.maxWorkers }}"
+            - name: WORKERS_PER_CORE
+              value: "{{ .Values.transcrobes.application.workersPerCore }}"
+            {{- end }}
+            - name: GUNICORN_TIMEOUT
               value: "{{ .Values.transcrobes.application.gunicornTimeout }}"
-            - name: TRANSCROBES_WSGI_PROCESS
-              value: "{{ .Values.transcrobes.application.wsgiProcess }}"
-            - name: TRANSCROBES_LISTEN_ADDRESS
+            - name: LISTEN_ADDRESS
               value: "{{ .Values.transcrobes.application.listenAddress }}"
-            - name: TRANSCROBES_LISTEN_PORT
+            - name: LISTEN_PORT
               value: "{{ .Values.transcrobes.application.listenPort }}"
-            - name: TRANSCROBES_ZH_CORENLP_HOST
+            - name: ZH_CORENLP_HOST
               value: {{ include "transcrobes.corenlpZh.fullname" . }}
             {{- if .Values.transcrobes.debug }}
             - name: TRANSCROBES_DEBUG
               value: "True"
             {{- end }}
-            - name: TRANSCROBES_BING_SUBSCRIPTION_KEY
+            - name: BING_SUBSCRIPTION_KEY
               value: "{{ .Values.transcrobes.bingSubscriptionKey }}"
-            - name: TRANSCROBES_BING_API_HOST
+            - name: BING_API_HOST
               value: "{{ .Values.transcrobes.bingApiHost }}"
-            - name: TRANSCROBES_ZH_EN_CEDICT_PATH
+            - name: ZH_EN_CEDICT_PATH
               value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.zhEnCedict.path }}"
-            - name: TRANSCROBES_ZH_EN_CEDICT_INMEM
+            - name: ZH_EN_CEDICT_INMEM
               value: "{{ .Values.transcrobes.zhEnCedict.inmem }}"
-            - name: TRANSCROBES_ZH_EN_ABC_DICT_PATH
+            - name: ZH_EN_ABC_DICT_PATH
               value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.zhEnAbcDict.path }}"
-            - name: TRANSCROBES_ZH_EN_ABC_DICT_INMEM
+            - name: ZH_EN_ABC_DICT_INMEM
               value: "{{ .Values.transcrobes.zhEnAbcDict.inmem }}"
-            - name: TRANSCROBES_ZH_HSK_LISTS_PATH
+            - name: ZH_HSK_LISTS_PATH
               value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.zhHskLists.path }}"
-            - name: TRANSCROBES_ZH_HSK_LISTS_INMEM
+            - name: ZH_HSK_LISTS_INMEM
               value: "{{ .Values.transcrobes.zhHskLists.inmem }}"
-            - name: TRANSCROBES_BING_TRANSLATOR_INMEM
+            - name: BING_TRANSLATOR_INMEM
               value: "{{ .Values.transcrobes.bingTranslator.inmem }}"
-            - name: TRANSCROBES_BING_TRANSLITERATOR_INMEM
+            - name: BING_TRANSLITERATOR_INMEM
               value: "{{ .Values.transcrobes.bingTransliterator.inmem }}"
-            - name: TRANSCROBES_ZH_SUBTLEX_FREQ_PATH
+            - name: ZH_SUBTLEX_FREQ_PATH
               value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.zhSubtlexFreq.path }}"
-            - name: TRANSCROBES_ZH_SUBTLEX_FREQ_INMEM
+            - name: ZH_SUBTLEX_FREQ_INMEM
               value: "{{ .Values.transcrobes.zhSubtlexFreq.inmem }}"
-            - name: TRANSCROBES_BROACASTER_MESSAGING_LAYER
+            - name: BROACASTER_MESSAGING_LAYER
               value: "{{ .Values.transcrobes.broadcasterMessagingLayer }}"
+
+            - name: PROJECT_NAME
+              value: {{ include "transcrobes.transcrobes.fullname" . }}
+            - name: FIRST_SUPERUSER
+              value: "{{ .Values.transcrobes.firstSuperuser }}"
+            - name: FIRST_SUPERUSER_PASSWORD
+              value: "{{ .Values.transcrobes.firstSuperuserPassword }}"
+
+            - name: SMTP_TLS
+              value: "{{ .Values.transcrobes.email.smtpTls }}"
+            - name: SMTP_PORT
+              value: "{{ .Values.transcrobes.email.smtpPort }}"
+            - name: SMTP_HOST
+              value: "{{ .Values.transcrobes.email.smtpHost }}"
+            - name: SMTP_USER
+              value: "{{ .Values.transcrobes.email.smtpUser }}"
+            - name: SMTP_PASSWORD
+              value: "{{ .Values.transcrobes.email.smtpPassword }}"
+            - name: EMAILS_FROM_EMAIL
+              value: "{{ .Values.transcrobes.email.emailsFromEmail }}"
+            - name: EMAILS_FROM_NAME
+              value: "{{ .Values.transcrobes.email.emailsFromName }}"
+            - name: EMAILS_ENABLED
+              value: "{{ .Values.transcrobes.email.enabled }}"
+            - name: EMAIL_RESET_TOKEN_EXPIRE_HOURS
+              value: "{{ .Values.transcrobes.email.emailResetTokenExpireHours }}"
+            - name: EMAIL_TEMPLATES_DIR
+              value: "{{ .Values.transcrobes.email.emailTemplatesDir }}"
+            - name: EMAIL_TEST_USER
+              value: "{{ .Values.transcrobes.email.emailTestUser }}"
+
+            - name: USERS_OPEN_REGISTRATION
+              value: "{{ .Values.transcrobes.usersOpenRegistration }}"
+
+            - name: SENTRY_DSN
+              value: "{{ .Values.transcrobes.sentryDsn }}"
+
             {{- if .Values.kafka.enabled }}
-            - name: TRANSCROBES_KAFKA_BROKER
+            - name: KAFKA_BROKER
               value: "{{ .Values.kafka.fullnameOverride }}"
             {{- end }}
 

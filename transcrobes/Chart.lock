@@ -1,15 +1,15 @@
 dependencies:
 - name: postgresql-ha
   repository: https://charts.bitnami.com/bitnami
-  version: 7.8.0
+  version: 7.8.8
 - name: ingress-nginx
   repository: https://kubernetes.github.io/ingress-nginx
-  version: 3.34.0
+  version: 3.36.0
 - name: kafka
   repository: https://charts.bitnami.com/bitnami
   version: 12.20.0
 - name: common
   repository: https://charts.bitnami.com/bitnami
-  version: 1.7.0
-digest: sha256:b1122d946122e8a6e5dcdde178f4e518b1861a5d967a27bfbcb048daa233b357
-generated: "2021-07-14T07:21:40.2871773+08:00"
+  version: 1.8.0
+digest: sha256:7f08c090230c3871c58ad8dd97610b97bbb34a8b32c79e7e2e08bdc3bdf780e7
+generated: "2021-08-23T16:22:05.213828512+08:00"

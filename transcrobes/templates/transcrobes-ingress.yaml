@@ -1,7 +1,6 @@
 {{- if .Values.transcrobes.enabled -}}
 {{- $fullName := include "transcrobes.transcrobes.fullname" . -}}
 {{- $servicePort := .Values.transcrobes.service.servicePort -}}
-{{- $asgiSvcPort := .Values.asgi.service.servicePort -}}
 {{- $reallyFullName := include "transcrobes.transcrobes.reallyFullname" . -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -28,20 +27,6 @@ spec:
     - host: {{ .Values.transcrobes.haHost }}
       http:
         paths:
-          - path: /subscriptions
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ $fullName }}-asgi
-                port:
-                  number: {{ $asgiSvcPort }}
-          - path: /api/graphql
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ $fullName }}-asgi
-                port:
-                  number: {{ $asgiSvcPort }}
           - path: /
             pathType: Prefix
             backend:
@@ -53,20 +38,6 @@ spec:
     - host: {{ . }}
       http:
         paths:
-          - path: /subscriptions
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ $fullName }}-asgi
-                port:
-                  number: {{ $asgiSvcPort }}
-          - path: /api/graphql
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ $fullName }}-asgi
-                port:
-                  number: {{ $asgiSvcPort }}
           - path: /
             pathType: Prefix
             backend:

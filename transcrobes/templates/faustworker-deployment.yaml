@@ -1,27 +1,27 @@
-{{- if .Values.statsrunner.enabled -}}
+{{- if .Values.faustworker.enabled -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "transcrobes.transcrobes.fullname" . }}-statsrunner
+  name: {{ include "transcrobes.transcrobes.fullname" . }}-faustworker
   labels:
-    {{- include "transcrobes.statsrunner.labels" . | nindent 4 }}
+    {{- include "transcrobes.faustworker.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.statsrunner.replicaCount }}
-  {{- if .Values.statsrunner.strategy }}
+  replicas: {{ .Values.faustworker.replicaCount }}
+  {{- if .Values.faustworker.strategy }}
   strategy:
-{{ toYaml .Values.statsrunner.strategy | indent 4 }}
+{{ toYaml .Values.faustworker.strategy | indent 4 }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "transcrobes.statsrunner.selectorLabels" . | nindent 6 }}
+      {{- include "transcrobes.faustworker.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-    {{- if .Values.statsrunner.podAnnotations }}
+    {{- if .Values.faustworker.podAnnotations }}
       annotations:
-{{ toYaml .Values.statsrunner.podAnnotations | indent 8 }}
+{{ toYaml .Values.faustworker.podAnnotations | indent 8 }}
     {{- end }}
       labels:
-        {{- include "transcrobes.statsrunner.labels" . | nindent 8 }}
+        {{- include "transcrobes.faustworker.labels" . | nindent 8 }}
     spec:
       initContainers:
         - name: check-db-ready
@@ -40,17 +40,17 @@ spec:
               value: "{{ .Release.Name }}-pgha-pgpool"
 
       containers:
-        - name: {{ template "transcrobes.name" . }}-{{ .Values.statsrunner.name }}
+        - name: {{ template "transcrobes.name" . }}-{{ .Values.faustworker.name }}
           image: "{{ .Values.transcrobes.image.repository }}:{{ .Values.transcrobes.image.tag }}"
           imagePullPolicy: {{ .Values.transcrobes.image.pullPolicy }}
           command: ["/bin/bash", "/app/scripts/runmanage.sh"]
           args: ["events_processor"]
           env:
-            {{- range $key, $value := .Values.statsrunner.extraEnv }}
+            {{- range $key, $value := .Values.faustworker.extraEnv }}
             - name: {{ $key }}
               value: "{{ $value }}"
             {{- end }}
-            {{- if .Values.statsrunner.debug }}
+            {{- if .Values.faustworker.debug }}
             - name: TRANSCROBES_DEBUG
               value: "True"
             {{- end }}
@@ -69,11 +69,11 @@ spec:
             - name: TRANSCROBES_KAFKA_BROKER
               value: "{{ .Values.kafka.fullnameOverride }}"
             - name: TRANSCROBES_KAFKA_CONSUMER_TIMEOUT_MS
-              value: "{{ .Values.statsrunner.kafkaConnection.consumerTimeoutMs }}"
+              value: "{{ .Values.faustworker.kafkaConnection.consumerTimeoutMs }}"
             - name: TRANSCROBES_KAFKA_STATS_LOOP_SLEEP_SECS
-              value: "{{ .Values.statsrunner.kafkaConnection.statsLoopSleepSecs }}"
+              value: "{{ .Values.faustworker.kafkaConnection.statsLoopSleepSecs }}"
             - name: TRANSCROBES_KAFKA_MAX_POLL_RECORDS
-              value: "{{ .Values.statsrunner.kafkaConnection.maxPollRecords }}"
+              value: "{{ .Values.faustworker.kafkaConnection.maxPollRecords }}"
 
       {{- if .Values.transcrobes.persistence.enabled }}
           volumeMounts:
