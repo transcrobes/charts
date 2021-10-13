@@ -41,39 +41,98 @@ spec:
 
       containers:
         - name: {{ template "transcrobes.name" . }}-{{ .Values.faustworker.name }}
-          image: "{{ .Values.transcrobes.image.repository }}:{{ .Values.transcrobes.image.tag }}"
+          image: "{{ .Values.faustworker.image.repository }}:{{ .Values.faustworker.image.tag }}"
           imagePullPolicy: {{ .Values.transcrobes.image.pullPolicy }}
-          command: ["/bin/bash", "/app/scripts/runmanage.sh"]
-          args: ["events_processor"]
+          # command: ["/bin/bash", "/app/scripts/runmanage.sh"]
+          # args: ["events_processor"]
+          # command: ["/bin/bash", "/fworker-start.sh"]
           env:
             {{- range $key, $value := .Values.faustworker.extraEnv }}
             - name: {{ $key }}
               value: "{{ $value }}"
             {{- end }}
             {{- if .Values.faustworker.debug }}
-            - name: TRANSCROBES_DEBUG
+            - name: DEBUG
               value: "True"
             {{- end }}
             - name: PYTHONUNBUFFERED  # MUST put or no logs printed to kube, but probably should be in values
               value: "0"
-            - name: TC_POSTGRES_USER
+
+            - name: POSTGRES_USER
               value: "{{ .Values.pgha.postgresql.username }}"
-            - name: TC_POSTGRES_DATABASE
+            - name: POSTGRES_DB
               value: "{{ .Values.pgha.postgresql.database }}"
-            - name: TC_POSTGRES_PASSWORD
+            - name: POSTGRES_PASSWORD
               value: "{{ .Values.pgha.postgresql.password }}"
-            - name: TC_POSTGRES_HOST
-              value: "{{ .Release.Name }}-pgha-pgpool"
-            - name: TRANSCROBES_SECRET_KEY
+            - name: POSTGRES_SERVER
+              value: {{ .Values.transcrobes.overrideDBHost | default (printf "%s-pgha-pgpool" .Release.Name) }}
+            - name: POSTGRES_PORT
+              value: "{{ .Values.pgha.service.port }}"
+
+            - name: SECRET_KEY
               value: "{{ .Values.transcrobes.secretKey }}"
-            - name: TRANSCROBES_KAFKA_BROKER
+            - name: KAFKA_BROKER
               value: "{{ .Values.kafka.fullnameOverride }}"
-            - name: TRANSCROBES_KAFKA_CONSUMER_TIMEOUT_MS
+            - name: KAFKA_CONSUMER_TIMEOUT_MS
               value: "{{ .Values.faustworker.kafkaConnection.consumerTimeoutMs }}"
-            - name: TRANSCROBES_KAFKA_STATS_LOOP_SLEEP_SECS
+            - name: KAFKA_STATS_LOOP_SLEEP_SECS
               value: "{{ .Values.faustworker.kafkaConnection.statsLoopSleepSecs }}"
-            - name: TRANSCROBES_KAFKA_MAX_POLL_RECORDS
+            - name: KAFKA_MAX_POLL_RECORDS
               value: "{{ .Values.faustworker.kafkaConnection.maxPollRecords }}"
+
+            - name: PROJECT_NAME
+              value: {{ include "transcrobes.transcrobes.fullname" . }}
+            - name: SERVER_NAME
+              value: {{ include "transcrobes.transcrobes.reallyFullname" . }}
+            - name: HA_HOST
+              value: "{{ .Values.transcrobes.haHost }}"
+            - name: SERVER_HOST
+              value: "http{{ if .Values.transcrobes.ingress.tls.enabled }}s{{ end }}://{{ .Values.transcrobes.haHost }}"
+
+            - name: MEDIA_ROOT
+              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.persistence.mediaPath }}"
+            - name: DATA_ROOT
+              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.persistence.dataPath }}"
+
+            - name: ZH_CORENLP_HOST
+              value: {{ include "transcrobes.corenlpZh.fullname" . }}
+            - name: BING_SUBSCRIPTION_KEY
+              value: "{{ .Values.transcrobes.bingSubscriptionKey }}"
+            - name: BING_API_HOST
+              value: "{{ .Values.transcrobes.bingApiHost }}"
+            - name: ZH_EN_CEDICT_PATH
+              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.zhEnCedict.path }}"
+            - name: ZH_EN_CEDICT_INMEM
+              value: "{{ .Values.transcrobes.zhEnCedict.inmem }}"
+            - name: ZH_EN_ABC_DICT_PATH
+              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.zhEnAbcDict.path }}"
+            - name: ZH_EN_ABC_DICT_INMEM
+              value: "{{ .Values.transcrobes.zhEnAbcDict.inmem }}"
+            - name: ZH_HSK_LISTS_PATH
+              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.zhHskLists.path }}"
+            - name: ZH_HSK_LISTS_INMEM
+              value: "{{ .Values.transcrobes.zhHskLists.inmem }}"
+            - name: BING_TRANSLATOR_INMEM
+              value: "{{ .Values.transcrobes.bingTranslator.inmem }}"
+            - name: BING_TRANSLITERATOR_INMEM
+              value: "{{ .Values.transcrobes.bingTransliterator.inmem }}"
+            - name: ZH_SUBTLEX_FREQ_PATH
+              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.zhSubtlexFreq.path }}"
+            - name: ZH_SUBTLEX_FREQ_INMEM
+              value: "{{ .Values.transcrobes.zhSubtlexFreq.inmem }}"
+            - name: BROACASTER_MESSAGING_LAYER
+              value: "{{ .Values.transcrobes.broadcasterMessagingLayer }}"
+
+            - name: FAUST_PORT
+              value: "{{ .Values.faustworker.application.port }}"
+
+            - name: SENTRY_DSN
+              value: "{{ .Values.transcrobes.sentryDsn }}"
+
+            - name: FIRST_SUPERUSER
+              value: "{{ .Values.transcrobes.firstSuperuser }}"
+            - name: FIRST_SUPERUSER_PASSWORD
+              value: "{{ .Values.transcrobes.firstSuperuserPassword }}"
 
       {{- if .Values.transcrobes.persistence.enabled }}
           volumeMounts:

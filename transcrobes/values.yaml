@@ -15,24 +15,6 @@ serviceAccounts:
     create: false
     # name:
 
-## You must replace these email addresses with your own.
-## Let's Encrypt will use this to contact you about expiring
-## certificates, and issues related to your account.
-certissuer:
-  prod:
-    name: letsencrypt-prod
-    enabled: false
-    privateKeySecretRef: transcrobes-le-key-prod
-  #   email: user@example.com  # You MUST declare a valid email here, even for staging!
-  staging:
-    name: letsencrypt-staging
-    enabled: false
-    privateKeySecretRef: transcrobes-le-key-staging
-  #   email: user@example.com  # You MUST declare a valid email here, even for staging!
-
-## Use the ingress-nginx chart dependency
-## aliased to ingress in requirements due to template limitations
-#
 ingress:
   enabled: true
   annotations:
@@ -46,42 +28,6 @@ ingress:
   tls:
     secretName: letsencrypt-cert-staging
 
-  controller:
-    config:
-      use-gzip: "true"
-      enable-brotli: "true"
-
-    ## Enable here for exposing metrics for prometheus
-    ##
-    metrics:
-      enabled: false
-      serviceMonitor:
-        enabled: false
-
-    ## TODO: Currently only NodePort or HostNetwork are supported, cloud provider LB support to come
-    ##
-    service:
-      # ## Uncomment here to use NodePort. You will need to comment out from type: "" below
-      # type: NodePort
-      # nodePorts:
-      #   ## Define a static NodePort so the cloud provider router can point to a known value
-      #   ##
-      #   https: 32443
-      # ## Enable plain http. This won't work on most browsers, who won't get from an http api when the page is https
-      # ##
-      # enableHttp: false
-      # ## Enable https.
-      # ##
-      # enableHttps: true  # TODO: this should be linked to the tls configs somehow
-
-    ## direct access to the hosts ports 80 and 443
-    ## This is only really appropriate/useful for machines (VMs) that have a public IP (or public IP NAT)
-    ## and you are only hosting serving transcrobes on this kubernetes instance
-      type: ""
-    hostNetwork: true
-    kind: DaemonSet
-    dnsPolicy: ClusterFirstWithHostNet
-    ## end of HostNetwork ingress configuration
 
 ## Stanford's CoreNLP with minimal Chinese model
 ##
@@ -171,7 +117,7 @@ corenlpZh:
   prefixURL: ""
 
 
-## Django App providing the glue and intelligence between other services
+## FastAPI App providing the glue and intelligence between other services
 ##
 transcrobes:
   ## If false, transcrobes will not be installed
@@ -237,11 +183,11 @@ transcrobes:
   ##
   podAnnotations: {}
 
-  ## Number of instances of the main Django app. Should probably be one per node, or thereabouts
+  ## Number of instances of the main FastAPI app. Should probably be 3-4 per node, or thereabouts depending on mem
   ##
   replicaCount: 1
 
-  ## This persistence houses the static data files (dictionaries, wordlists) for the django service
+  ## This persistence houses the static data files (dictionaries, wordlists) for the service
   ## TODO: these should eventually probably both be dealt with otherwise, like via object storage
   ##
   persistence:
@@ -254,6 +200,7 @@ transcrobes:
     ##
     dataRoot: '/opt/transcrobes/'
     mediaPath: 'media'
+    dataPath: 'data'
 
   ## Configuration for the liveness and readiness probes
   ## liveness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
@@ -285,7 +232,7 @@ transcrobes:
   ## Sentry config
   sentryDsn: ""
 
-  ## These are turned into env vars that are required for the Django app
+  ## These are turned into env vars that are required for the applications
   ##
   bingSubscriptionKey: "your_bing_subscription_key"
   bingApiHost: 'api.cognitive.microsofttranslator.com'
@@ -501,16 +448,19 @@ kafka:
   fullnameOverride: kafka
   enabled: true
 
-## Django managment command that consumes user events to update aggregated stats
+## Worker that manages tasks and consumes user events to update and serve aggregated stats
 faustworker:
   name: faustworker
   enabled: true
   debug: false
 
   ## faustworker container image
-  ## All the code is in the main transcrobes/transcrobes image
-  ## currently there is no way to use a different version of the image
   ##
+  image:
+    repository: transcrobes/transcrobes-worker
+    tag: 0.2.0
+    pullPolicy: IfNotPresent
+
 
   ## desc here FIXME:
   #
@@ -541,3 +491,13 @@ faustworker:
   application:
     importParseChunkSizeBytes: 20000  # see transcrobes settings.py for comments
     importDetectChunkSizeBytes: 5000
+    port: 6066
+
+  ## TODO: document
+  service:
+    annotations: {}
+    labels: {}
+    # nodePort: 6066  # mainly useful for debug
+
+    servicePort: 6066
+    type: ClusterIP  # TODO: unused???

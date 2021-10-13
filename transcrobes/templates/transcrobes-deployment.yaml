@@ -131,6 +131,8 @@ spec:
               value: "{{ .Values.pgha.service.port }}"
             - name: MEDIA_ROOT
               value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.persistence.mediaPath }}"
+            - name: DATA_ROOT
+              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.persistence.dataPath }}"
             - name: SYSTEM_HOSTS
               value: {{ include "transcrobes.transcrobes.fullname" . }},{{ include "transcrobes.transcrobes.reallyFullname" . }}
             - name: IMPORT_MAX_UPLOAD_SIZE_KB
@@ -222,6 +224,11 @@ spec:
               value: "{{ .Values.transcrobes.email.emailTemplatesDir }}"
             - name: EMAIL_TEST_USER
               value: "{{ .Values.transcrobes.email.emailTestUser }}"
+
+            - name: FAUST_HOST
+              value: {{ include "transcrobes.faustworker.fullname" . }}
+            - name: FAUST_PORT
+              value: "{{ .Values.faustworker.application.port }}"
 
             - name: USERS_OPEN_REGISTRATION
               value: "{{ .Values.transcrobes.usersOpenRegistration }}"

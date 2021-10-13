@@ -57,24 +57,12 @@ component: {{ .Values.transcrobes.name | quote }}
 {{ include "transcrobes.common.matchLabels" . }}
 {{- end -}}
 
-
-{{- define "transcrobes.asgi.labels" -}}
-{{ include "transcrobes.asgi.matchLabels" . }}
-{{ include "transcrobes.common.metaLabels" . }}
-{{- end -}}
-
-{{- define "transcrobes.asgi.matchLabels" -}}
-component: {{ .Values.asgi.name | quote }}
-{{ include "transcrobes.common.matchLabels" . }}
-{{- end -}}
-
-
 {{/*
-Common labels statsrunner
+Common labels faustworker
 */}}
-{{- define "transcrobes.statsrunner.labels" -}}
+{{- define "transcrobes.faustworker.labels" -}}
 helm.sh/chart: {{ include "transcrobes.name" . }}
-{{ include "transcrobes.statsrunner.selectorLabels" . }}
+{{ include "transcrobes.faustworker.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -82,41 +70,29 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
 {{/*
-Selector labels statsrunner
+Selector labels faustworker
 */}}
-{{- define "transcrobes.statsrunner.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "transcrobes.name" . }}-statsrunner
-app.kubernetes.io/instance: {{ .Release.Name }}-statsrunner
+{{- define "transcrobes.faustworker.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "transcrobes.name" . }}-faustworker
+app.kubernetes.io/instance: {{ .Release.Name }}-faustworker
 {{- end }}
 
-{{- define "transcrobes.statsrunner.matchLabels" -}}
-component: {{ .Values.statsrunner.name | quote }}
+{{- define "transcrobes.faustworker.matchLabels" -}}
+component: {{ .Values.faustworker.name | quote }}
 {{ include "transcrobes.common.matchLabels" . }}
 {{- end -}}
 
-{{/*
-Common labels importsrunner
-*/}}
-{{- define "transcrobes.importsrunner.labels" -}}
-helm.sh/chart: {{ include "transcrobes.name" . }}
-{{ include "transcrobes.importsrunner.selectorLabels" . }}
-{{- if .Chart.AppVersion }}
-app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
-{{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- end }}
-
-{{/*
-Selector labels importsrunner
-*/}}
-{{- define "transcrobes.importsrunner.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "transcrobes.name" . }}-importsrunner
-app.kubernetes.io/instance: {{ .Release.Name }}-importsrunner
-{{- end }}
-
-{{- define "transcrobes.importsrunner.matchLabels" -}}
-component: {{ .Values.importsrunner.name | quote }}
-{{ include "transcrobes.common.matchLabels" . }}
+{{- define "transcrobes.corenlpZh.fullname" -}}
+{{- if .Values.corenlpZh.fullnameOverride -}}
+{{- .Values.corenlpZh.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- $name := default .Chart.Name .Values.nameOverride -}}
+{{- if contains $name .Release.Name -}}
+{{- printf "%s-%s" .Release.Name .Values.corenlpZh.name | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- printf "%s-%s-%s" .Release.Name $name .Values.corenlpZh.name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
 {{- end -}}
 
 {{/*
@@ -153,15 +129,15 @@ Create a fully qualified corenlpZh name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 */}}
 
-{{- define "transcrobes.corenlpZh.fullname" -}}
-{{- if .Values.corenlpZh.fullnameOverride -}}
-{{- .Values.corenlpZh.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- define "transcrobes.faustworker.fullname" -}}
+{{- if .Values.faustworker.fullnameOverride -}}
+{{- .Values.faustworker.fullnameOverride | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
 {{- $name := default .Chart.Name .Values.nameOverride -}}
 {{- if contains $name .Release.Name -}}
-{{- printf "%s-%s" .Release.Name .Values.corenlpZh.name | trunc 63 | trimSuffix "-" -}}
+{{- printf "%s-%s" .Release.Name .Values.faustworker.name | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
-{{- printf "%s-%s-%s" .Release.Name $name .Values.corenlpZh.name | trunc 63 | trimSuffix "-" -}}
+{{- printf "%s-%s-%s" .Release.Name $name .Values.faustworker.name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 {{- end -}}
 {{- end -}}

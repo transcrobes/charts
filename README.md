@@ -1,12 +1,13 @@
 # transcrobes
 
-[transcrobes](https://gitlab.com/transcrobes/charts) is a Kubernetes Helm Chart to install Transcrobes.
+[transcrobes](https://github.com/transcrobes/charts) is a Kubernetes Helm Chart to install Transcrobes.
 
 ## TL;DR;
 
 ```console
-$ helm repo add transcrobes https://charts.transcrob.es
-$ helm install transcrobes/transcrobes --set transcrobes.bingSubscriptionKey=my_bing_key --set transcrobes.hosts={transcrobes.example.com}
+$ git clone https://github.com/transcrobes/charts
+$ cd charts
+$ helm upgrade --install my-release ./transcrobes --set transcrobes.bingSubscriptionKey=my_bing_key --set transcrobes.nodeHosts={node1.example.com} --set transcrobes.haHost=transcrobes.example.com
 ```
 
 ## Introduction
@@ -15,18 +16,12 @@ This chart bootstraps a [Transcrobes](https://transcrob.es) deployment on a [Kub
 
 ## Prerequisites
 ### Installation
-  - A publicly accessible Kubernetes 1.20+ (may work on other versions but is currently untested)
+  - A publicly accessible Kubernetes 1.22+ (may work on other versions but is currently untested)
 ### Working installation
   - A publicly available FQDN pointing to your Kubernetes cluster. In the following examples this is `transcrobes.example.com`. Currently only `HostNetwork` and `NodePort` are implemented but loadbalancer IPs will be supported soon.
   - A valid Microsoft Azure Cognitive services API token. Microsoft currently provides 2M characters (translations, dictionary lookups, etc.) free per month. This requires a valid credit card to set up but the default configuration will stop translating at 2M characters rather than start charging you. More details [here](https://azure.microsoft.com/en-us/pricing/details/cognitive-services/translator-text-api/).
 
 ## Installing the Chart
-
-To install the chart with the release name `my-release`:
-
-```console
-$ helm install --release my-release transcrobes/transcrobes --set transcrobes.bingSubscriptionKey=my_bing_key --set transcrobes.hosts={transcrobes.example.com}
-```
 
 The command deploys transcrobes on the Kubernetes cluster in the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
 

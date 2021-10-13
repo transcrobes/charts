@@ -1,7 +1,7 @@
 apiVersion: v2
 name: transcrobes
 description: A Kubernetes Helm Chart for installing Transcrobes
-version: 0.0.19
+version: 0.0.20
 keywords:
   - Transcrobes
   - transcrob.es
@@ -18,16 +18,8 @@ dependencies:
     tags:
       - transcrobes-database
 
-  - name: ingress-nginx
-    version: 3.x.x
-    alias: ingress  # because https://github.com/helm/helm/issues/2192
-    repository: https://kubernetes.github.io/ingress-nginx
-    condition: ingress-nginx.enabled  # FIXME: this doesn't appear to work
-    tags:
-      - transcrobes-nginx
-
   - name: kafka
-    version: 12.x.x
+    version: 14.x.x
     repository: https://charts.bitnami.com/bitnami
     condition: kafka.enabled
     tags:
