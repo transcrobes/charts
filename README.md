@@ -17,6 +17,10 @@ This chart bootstraps a [Transcrobes](https://transcrob.es) deployment on a [Kub
 ## Prerequisites
 ### Installation
   - A publicly accessible Kubernetes 1.22+ (may work on other versions but is currently untested)
+  - helm (3.7.0+)
+  - ingress-nginx installed and able to serve any namespace
+  - cert-manager installed with cluster issuers for `letsencrypt-prod` and `letsencrypt-staging` (can be overridden)
+  - kilo installed and encrypting traffic between all nodes (optional, but highly recommended for insecure clouds)
 ### Working installation
   - A publicly available FQDN pointing to your Kubernetes cluster. In the following examples this is `transcrobes.example.com`. Currently only `HostNetwork` and `NodePort` are implemented but loadbalancer IPs will be supported soon.
   - A valid Microsoft Azure Cognitive services API token. Microsoft currently provides 2M characters (translations, dictionary lookups, etc.) free per month. This requires a valid credit card to set up but the default configuration will stop translating at 2M characters rather than start charging you. More details [here](https://azure.microsoft.com/en-us/pricing/details/cognitive-services/translator-text-api/).
