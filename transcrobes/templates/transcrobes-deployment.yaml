@@ -25,6 +25,14 @@ spec:
         {{- include "transcrobes.transcrobes.labels" . | nindent 8 }}
         # release: prometheus
     spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              component: transcrobes
+
       initContainers:
         - name: check-db-ready
           image: postgres:13

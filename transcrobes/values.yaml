@@ -387,6 +387,12 @@ pgha:
   volumePermissions:
     enabled: true
 
+  ## Override of upstream pullPolicy
+  ##
+  postgresqlImage:
+    tag: 14
+    pullPolicy: IfNotPresent
+
   postgresql:
     ## Use the PostgreSQL chart dependency.
     ##
@@ -408,11 +414,14 @@ pgha:
 
     ## PostgreSQL override parameters added to main config
     ##
-    # extendedConf: { "sharedBuffers": "2GB" }
+    ## password_encryption = md5 is currently required when using the postgres 14 image
+    extendedConf: |-
+      password_encryption = md5
 
     ## PostgreSQL max_connections parameter
     ##
     # maxConnections: 100
+
 
   ## Persistent Volume Storage configuration.
   ## ref: https://kubernetes.io/docs/user-guide/persistent-volumes
