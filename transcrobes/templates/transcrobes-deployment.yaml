@@ -35,7 +35,7 @@ spec:
 
       initContainers:
         - name: check-db-ready
-          image: postgres:13
+          image: postgres:14
           command: ['sh', '-c',
             'until psql -c "select 1;";
             do echo waiting for database; sleep 2; done;']
@@ -66,19 +66,6 @@ spec:
             periodSeconds: {{ .Values.transcrobes.liveness.periodSeconds }}
             initialDelaySeconds: {{ .Values.transcrobes.liveness.initialDelaySeconds }}
             failureThreshold: {{ .Values.transcrobes.liveness.failureThreshold }}
-
-          # readinessProbe:
-          #   httpGet:
-          #     path: /api/v1/enrich/load_definitions_cache
-          #     port: http
-          #     httpHeaders:
-          #       - name: Host
-          #         value: "{{ .Values.transcrobes.haHost }}"
-          #   timeoutSeconds: {{ .Values.transcrobes.readiness.timeoutSeconds }}
-          #   periodSeconds: {{ .Values.transcrobes.readiness.periodSeconds }}
-          #   initialDelaySeconds: {{ .Values.transcrobes.readiness.initialDelaySeconds }}
-          #   failureThreshold: {{ .Values.transcrobes.readiness.failureThreshold }}
-          #   successThreshold: {{ .Values.transcrobes.readiness.successThreshold }}
 
           startupProbe:
             httpGet:

@@ -1,0 +1,46 @@
+{{- if and .Values.transcrobes.enabled .Values.transcrobes.backups.enabled -}}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "transcrobes.transcrobes.fullname" . }}
+spec:
+  schedule: "10 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: {{ template "transcrobes.name" . }}-backups
+              image: "{{ .Values.transcrobes.backups.image.repository }}:{{ .Values.transcrobes.backups.image.tag }}"
+              imagePullPolicy: {{ .Values.transcrobes.backups.image.pullPolicy }}
+              env:
+                - name: PGUSER
+                  value: "{{ .Values.pgha.postgresql.username }}"
+                - name: PGDATABASE
+                  value: "{{ .Values.pgha.postgresql.database }}"
+                - name: PGPASSWORD
+                  value: "{{ .Values.pgha.postgresql.password }}"
+                - name: PGHOST
+                  value: {{ .Values.transcrobes.overrideDBHost | default (printf "%s-pgha-pgpool" .Release.Name) }}
+                - name: DATA_ROOT
+                  value: "{{ .Values.transcrobes.backups.dataRoot }}"
+                - name: BACKUPS_MEDIA_PATH
+                  value: "{{ .Values.transcrobes.backups.dataRoot }}{{ .Values.transcrobes.backups.mediaPath }}"
+                - name: BACKUPS_DATABASE_PATH
+                  value: "{{ .Values.transcrobes.backups.dataRoot }}{{ .Values.transcrobes.backups.databasePath }}"
+                - name: MEDIA_ROOT
+                  value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.persistence.mediaPath }}"
+              volumeMounts:
+                - mountPath: "{{ .Values.transcrobes.backups.dataRoot }}"
+                  name: {{ include "transcrobes.transcrobes.fullname" . }}-backups
+                - mountPath: "{{ .Values.transcrobes.persistence.dataRoot }}"
+                  name: {{ include "transcrobes.transcrobes.fullname" . }}
+          restartPolicy: OnFailure
+          volumes:
+            - name: {{ include "transcrobes.transcrobes.fullname" . }}-backups
+              persistentVolumeClaim:
+                claimName: {{ include "transcrobes.transcrobes.fullname" . }}-backups
+            - name: {{ include "transcrobes.transcrobes.fullname" . }}
+              persistentVolumeClaim:
+                claimName: {{ include "transcrobes.transcrobes.fullname" . }}
+{{- end }}

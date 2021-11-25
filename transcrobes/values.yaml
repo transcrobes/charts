@@ -194,13 +194,35 @@ transcrobes:
     enabled: true
     accessMode: ReadWriteMany
     size: 10Gi
-    # storageClassName: -  # something like longhorn-nfs is required
+    # storageClassName: -  # something like longhorn is REQUIRED
 
     ## App config passed as env var and used for volume mount
     ##
     dataRoot: '/opt/transcrobes/'
     mediaPath: 'media'
     dataPath: 'data'
+
+  ## This persistence houses the database and user media backups for the service
+  ## TODO: these should eventually probably both be dealt with otherwise, like via object storage
+  ##
+  backups:
+    ## transcrobes container image
+    ##
+    image:
+      repository: transcrobes/transcrobes-backups
+      tag: 0.2.0
+      pullPolicy: IfNotPresent
+
+    enabled: true
+    accessMode: ReadWriteMany
+    size: 10Gi
+    # storageClassName: -  # something like longhorn is REQUIRED
+
+    ## App config passed as env var and used for volume mount
+    ##
+    dataRoot: '/opt/backups/'
+    mediaPath: 'media'
+    databasePath: 'data'
 
   ## Configuration for the liveness and readiness probes
   ## liveness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
@@ -378,11 +400,6 @@ transcrobes:
 
 pgha:
   enabled: true
-  ## Override of upstream pullPolicy
-  ##
-  postgresqlImage:
-    pullPolicy: IfNotPresent
-
   # Needed because of a bug when specifying extendedConf
   volumePermissions:
     enabled: true
