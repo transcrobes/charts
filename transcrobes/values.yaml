@@ -206,6 +206,8 @@ transcrobes:
   ## TODO: these should eventually probably both be dealt with otherwise, like via object storage
   ##
   backups:
+    enabled: true
+
     ## transcrobes container image
     ##
     image:
@@ -213,9 +215,10 @@ transcrobes:
       tag: 0.2.0
       pullPolicy: IfNotPresent
 
-    enabled: true
+    cronSchedule: '0 * * * *'
     accessMode: ReadWriteMany
     size: 10Gi
+
     # storageClassName: -  # something like longhorn is REQUIRED
 
     ## App config passed as env var and used for volume mount
@@ -223,6 +226,28 @@ transcrobes:
     dataRoot: '/opt/backups/'
     mediaPath: 'media'
     databasePath: 'data'
+
+    ## If ssh is enabled, then will attempt to rsync to the remote destination after backup
+    ## The destination server needs to be already set up to accept ssh login via key, with
+    ## the public key that corresponds to a secret that you have already set up, and the details
+    ## of which you must provide via `keyName` and `keyKey` below. Your secret should be created
+    ## to achieve the same format/result as:
+    ## `kubectl create secret generic secret-ssh-auth --from-file=ssh-privatekey=/path/to/your/private.key`
+    ##
+    ## You need to either use the image created by
+    ## https://github.com/transcrobes/transcrobes/blob/0.6.1/Dockerfile.backups
+    ## or something that achieves the same/similar result
+    ##
+    ssh:
+      enabled: false
+      keysDirectory: /etc/backups
+      remotePath: /opt/backups/
+      keyName: secret-ssh-auth
+      keyKey: ssh-privatekey
+      host: backup-host.local
+      port: 22
+      user: backups
+      rsyncOptions: ""  # rsync ??? source dest IN ADDITION to the existing -ah
 
   ## Configuration for the liveness and readiness probes
   ## liveness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/

@@ -4,7 +4,7 @@ kind: CronJob
 metadata:
   name: {{ include "transcrobes.transcrobes.fullname" . }}
 spec:
-  schedule: "10 * * * *"
+  schedule: "{{ .Values.transcrobes.backups.cronSchedule }}"
   jobTemplate:
     spec:
       template:
@@ -30,12 +30,33 @@ spec:
                   value: "{{ .Values.transcrobes.backups.dataRoot }}{{ .Values.transcrobes.backups.databasePath }}"
                 - name: MEDIA_ROOT
                   value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.persistence.mediaPath }}"
+
+                {{- if .Values.transcrobes.backups.ssh.enabled }}
+                - name: BACKUPS_SSH_KEY_PATH
+                  value: "{{ .Values.transcrobes.backups.ssh.keysDirectory }}/{{ .Values.transcrobes.backups.ssh.keyKey }}"
+                - name: BACKUPS_SSH_HOST
+                  value: "{{ .Values.transcrobes.backups.ssh.host }}"
+                - name: BACKUPS_SSH_PORT
+                  value: "{{ .Values.transcrobes.backups.ssh.port }}"
+                - name: BACKUPS_SSH_USER
+                  value: "{{ .Values.transcrobes.backups.ssh.user }}"
+                - name: BACKUPS_SSH_REMOTE_PATH
+                  value: "{{ .Values.transcrobes.backups.ssh.remotePath }}"
+                - name: BACKUPS_SSH_RSYNC_OPTIONS
+                  value: "{{ .Values.transcrobes.backups.ssh.rsyncOptions }}"
+                {{- end }}
+
               volumeMounts:
                 - mountPath: "{{ .Values.transcrobes.backups.dataRoot }}"
                   name: {{ include "transcrobes.transcrobes.fullname" . }}-backups
                 - mountPath: "{{ .Values.transcrobes.persistence.dataRoot }}"
                   name: {{ include "transcrobes.transcrobes.fullname" . }}
-          restartPolicy: OnFailure
+                {{- if .Values.transcrobes.backups.ssh.enabled }}
+                - mountPath: "{{ .Values.transcrobes.backups.ssh.keysDirectory }}"
+                  name: ssh-key
+                {{- end }}
+
+          restartPolicy: Never
           volumes:
             - name: {{ include "transcrobes.transcrobes.fullname" . }}-backups
               persistentVolumeClaim:
@@ -43,4 +64,11 @@ spec:
             - name: {{ include "transcrobes.transcrobes.fullname" . }}
               persistentVolumeClaim:
                 claimName: {{ include "transcrobes.transcrobes.fullname" . }}
+
+            {{- if .Values.transcrobes.backups.ssh.enabled }}
+            - name: ssh-key
+              secret:
+                secretName: "{{ .Values.transcrobes.backups.ssh.keyName }}"
+                defaultMode: 0400
+            {{- end }}
 {{- end }}
