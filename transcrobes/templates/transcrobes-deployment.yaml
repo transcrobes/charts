@@ -231,6 +231,11 @@ spec:
             - name: SENTRY_DSN
               value: "{{ .Values.transcrobes.sentryDsn }}"
 
+            - name: TRACKING_KEY
+              value: "{{ .Values.transcrobes.tracking.key }}"
+            - name: TRACKING_ENDPOINT
+              value: "{{ .Values.transcrobes.tracking.endpoint }}"
+
             {{- if .Values.kafka.enabled }}
             - name: KAFKA_BROKER
               value: "{{ .Values.kafka.fullnameOverride }}"

@@ -151,6 +151,11 @@ transcrobes:
     emailTemplatesDir: "/app/app/email-templates/build"
     emailTestUser: test@example.com
 
+  # OpenReplay https://github.com/openreplay/openreplay tracking
+  tracking:
+    key: your_openreplay_key
+    endpoint: "https://your.openreplay.endpoint/injest"
+
   ## Override DB host, set this if you don't
   ## want to use the default, kubernetes postgresql
   ##
@@ -175,8 +180,8 @@ transcrobes:
   ## transcrobes container image
   ##
   image:
-    repository: transcrobes/transcrobes
-    tag: 0.2.0
+    repository: transcrobes/transcrobes-web
+    tag: 0.7.0
     pullPolicy: IfNotPresent
 
   ## Annotations to be added to transcrobes pods
@@ -519,7 +524,7 @@ faustworker:
   ##
   image:
     repository: transcrobes/transcrobes-worker
-    tag: 0.2.0
+    tag: 0.7.0
     pullPolicy: IfNotPresent
 
 
