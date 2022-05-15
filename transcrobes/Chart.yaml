@@ -6,7 +6,7 @@ keywords:
   - Transcrobes
   - transcrob.es
 sources:
-  - https://gitlab.com/transcrobes/charts
+  - https://github.com/transcrobes/charts
 home: https://transcrob.es
 icon: https://transcrob.es/img/tc128.png
 dependencies:

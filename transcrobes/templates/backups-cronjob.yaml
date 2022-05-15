@@ -4,10 +4,14 @@ kind: CronJob
 metadata:
   name: {{ include "transcrobes.transcrobes.fullname" . }}
 spec:
+  concurrencyPolicy: Forbid
   schedule: "{{ .Values.transcrobes.backups.cronSchedule }}"
   jobTemplate:
     spec:
       template:
+        metadata:
+          labels:
+            jobname: {{ template "transcrobes.name" . }}-backups
         spec:
           containers:
             - name: {{ template "transcrobes.name" . }}-backups
