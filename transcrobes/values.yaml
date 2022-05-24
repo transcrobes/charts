@@ -436,14 +436,14 @@ pgha:
 
   ## Override of upstream pullPolicy
   ##
-  postgresqlImage:
-    tag: 14
-    pullPolicy: IfNotPresent
-
   postgresql:
     ## Use the PostgreSQL chart dependency.
     ##
     enabled: true
+
+    image:
+      tag: 14
+      pullPolicy: IfNotPresent
 
     ### PostgreSQL User to create.
     ##

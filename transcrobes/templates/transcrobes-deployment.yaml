@@ -123,7 +123,7 @@ spec:
             - name: POSTGRES_SERVER
               value: {{ .Values.transcrobes.overrideDBHost | default (printf "%s-pgha-pgpool" .Release.Name) }}
             - name: POSTGRES_PORT
-              value: "{{ .Values.pgha.service.port }}"
+              value: "{{ .Values.pgha.service.ports.postgresql }}"
             - name: MEDIA_ROOT
               value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.persistence.mediaPath }}"
             - name: DATA_ROOT

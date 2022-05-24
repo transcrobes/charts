@@ -1,12 +1,12 @@
 dependencies:
 - name: postgresql-ha
   repository: https://charts.bitnami.com/bitnami
-  version: 7.12.3
+  version: 9.0.12
 - name: kafka
   repository: https://charts.bitnami.com/bitnami
-  version: 14.2.5
+  version: 17.0.0
 - name: common
   repository: https://charts.bitnami.com/bitnami
-  version: 1.10.1
-digest: sha256:0e80a985ffeb2c6e18b12a790010d64dada40386c8047328f2b491bb8f04218e
-generated: "2021-11-01T10:52:16.169820757+08:00"
+  version: 1.14.1
+digest: sha256:ddaa609e2585d3dc720051988ed97f4bdd173161d5e203f6e8105b0da4c65ffa
+generated: "2022-05-24T23:09:54.280640742+08:00"
