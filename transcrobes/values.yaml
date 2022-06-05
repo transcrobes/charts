@@ -204,6 +204,7 @@ transcrobes:
     ## App config passed as env var and used for volume mount
     ##
     dataRoot: '/opt/transcrobes/'
+    localDataRoot: '/opt/transcrobesLocal/'
     mediaPath: 'media'
     dataPath: 'data'
 
@@ -504,6 +505,13 @@ kafka:
   fullnameOverride: kafka
   enabled: true
   maxMessageBytes: "5242880"
+  autoCreateTopicsEnable: false
+  provisioning:
+    topics:
+      - vocab_event_topic
+      - action_event_topic
+      - card_event_topic
+
   extraEnvVars:
   - name: KAFKA_CFG_MAX_PARTITION_FETCH_BYTES
     value: "5242880"
@@ -558,6 +566,7 @@ faustworker:
     importParseChunkSizeBytes: 20000  # see transcrobes settings.py for comments
     importDetectChunkSizeBytes: 5000
     port: 6066
+    statsPath: all_user_data
 
   ## TODO: document
   service:

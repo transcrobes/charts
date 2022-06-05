@@ -34,6 +34,8 @@ spec:
                   value: "{{ .Values.transcrobes.backups.dataRoot }}{{ .Values.transcrobes.backups.databasePath }}"
                 - name: MEDIA_ROOT
                   value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.persistence.mediaPath }}"
+                - name: STATS_URL_ENDPOINT
+                  value: http://{{ include "transcrobes.faustworker.fullname" . }}:{{ .Values.faustworker.application.port }}/{{ .Values.faustworker.application.statsPath }}
 
                 {{- if .Values.transcrobes.backups.ssh.enabled }}
                 - name: BACKUPS_SSH_KEY_PATH

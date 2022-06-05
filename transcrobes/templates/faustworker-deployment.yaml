@@ -72,7 +72,8 @@ spec:
             - name: SECRET_KEY
               value: "{{ .Values.transcrobes.secretKey }}"
             - name: KAFKA_BROKER
-              value: "{{ .Values.kafka.fullnameOverride }}"
+              value: {{ .Values.faustworker.overrideKafkaHost | default .Values.kafka.fullnameOverride }}
+
             - name: KAFKA_CONSUMER_TIMEOUT_MS
               value: "{{ .Values.faustworker.kafkaConnection.consumerTimeoutMs }}"
             - name: KAFKA_STATS_LOOP_SLEEP_SECS
@@ -93,6 +94,8 @@ spec:
               value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.persistence.mediaPath }}"
             - name: DATA_ROOT
               value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.persistence.dataPath }}"
+            - name: LOCAL_DATA_ROOT
+              value: "{{ .Values.transcrobes.persistence.localDataRoot }}{{ .Values.transcrobes.persistence.dataPath }}"
 
             - name: ZH_CORENLP_HOST
               value: {{ include "transcrobes.corenlpZh.fullname" . }}

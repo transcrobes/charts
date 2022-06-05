@@ -238,7 +238,7 @@ spec:
 
             {{- if .Values.kafka.enabled }}
             - name: KAFKA_BROKER
-              value: "{{ .Values.kafka.fullnameOverride }}"
+              value: {{ .Values.transcrobes.overrideKafkaHost | default .Values.kafka.fullnameOverride }}
             {{- end }}
 
       {{- if .Values.transcrobes.persistence.enabled }}
