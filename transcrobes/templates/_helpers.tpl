@@ -58,6 +58,31 @@ component: {{ .Values.transcrobes.name | quote }}
 {{- end -}}
 
 {{/*
+Common labels sworker
+*/}}
+{{- define "transcrobes.sworker.labels" -}}
+helm.sh/chart: {{ include "transcrobes.name" . }}
+{{ include "transcrobes.sworker.selectorLabels" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+
+{{/*
+Selector labels sworker
+*/}}
+{{- define "transcrobes.sworker.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "transcrobes.name" . }}-sworker
+app.kubernetes.io/instance: {{ .Release.Name }}-sworker
+{{- end }}
+
+{{- define "transcrobes.sworker.matchLabels" -}}
+component: {{ .Values.sworker.name | quote }}
+{{ include "transcrobes.common.matchLabels" . }}
+{{- end -}}
+
+{{/*
 Common labels faustworker
 */}}
 {{- define "transcrobes.faustworker.labels" -}}
@@ -124,10 +149,18 @@ Create the name of the service account to use for the transcrobes component
 {{- end -}}
 {{- end -}}
 
-{{/*
-Create a fully qualified corenlpZh name.
-We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
-*/}}
+{{- define "transcrobes.sworker.fullname" -}}
+{{- if .Values.sworker.fullnameOverride -}}
+{{- .Values.sworker.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- $name := default .Chart.Name .Values.nameOverride -}}
+{{- if contains $name .Release.Name -}}
+{{- printf "%s-%s" .Release.Name .Values.sworker.name | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- printf "%s-%s-%s" .Release.Name $name .Values.sworker.name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
 
 {{- define "transcrobes.faustworker.fullname" -}}
 {{- if .Values.faustworker.fullnameOverride -}}

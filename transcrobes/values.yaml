@@ -156,10 +156,11 @@ transcrobes:
     key: your_openreplay_key
     endpoint: "https://your.openreplay.endpoint/injest"
 
-  ## Override DB host, set this if you don't
-  ## want to use the default, kubernetes postgresql
+  ## Override DB host, set this if you DON'T
+  ## want to use the default, kubernetes pgpool
   ##
   # overrideDBHost: tck-pgha-postgresql
+  # overrideStatsDBHost: tck-statsdb-postgresql
 
   ## Ingress related configuration for setting up the SSL ingress
   ##
@@ -500,18 +501,83 @@ pgha:
   volumePermissionsImage:
     pullPolicy: IfNotPresent
 
+statsdb:
+  enabled: true
+  # Needed because of a bug when specifying extendedConf
+  volumePermissions:
+    enabled: true
+
+  ## Override of upstream pullPolicy
+  ##
+  postgresql:
+    ## Use the PostgreSQL chart dependency.
+    ##
+    enabled: true
+
+    image:
+      tag: 14
+      pullPolicy: IfNotPresent
+
+    ### PostgreSQL User to create.
+    ##
+    username: postgres
+
+    ## PostgreSQL Password for the new user.
+    ## If not set, a random 10 characters password will be used.
+    ##
+    password: transpass
+    repmgrPassword: transpass
+
+    ## PostgreSQL Database to create.
+    ##
+    database: transcrobes
+
+    ## PostgreSQL override parameters added to main config
+    ##
+    ## password_encryption = md5 is currently required when using the postgres 14 image
+    extendedConf: |-
+      password_encryption = md5
+
+    ## PostgreSQL max_connections parameter
+    ##
+    # maxConnections: 100
+
+
+  ## Persistent Volume Storage configuration.
+  ## ref: https://kubernetes.io/docs/user-guide/persistent-volumes
+  ##
+  persistence:
+    ## Enable PostgreSQL persistence using Persistent Volume Claims.
+    ##
+    enabled: true
+    ## Persistent Volume Storage Class
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    ##   GKE, AWS & OpenStack)
+    ##
+    # storageClass: "-"
+
+    ## A manually managed Persistent Volume and Claim
+    ## Requires persistence.enabled: true
+    ## If defined, PVC must be created manually before volume will be bound
+    # existingClaim:
+
+    accessMode: ReadWriteOnce
+    size: 10Gi
+
+  ## Don't always pull image
+  volumePermissionsImage:
+    pullPolicy: IfNotPresent
+
+
 ## Kafka for system user events
 kafka:
   fullnameOverride: kafka
   enabled: true
   maxMessageBytes: "5242880"
-  autoCreateTopicsEnable: false
-  provisioning:
-    topics:
-      - vocab_event_topic
-      - action_event_topic
-      - card_event_topic
-
+  replicaCount: 1
   extraEnvVars:
   - name: KAFKA_CFG_MAX_PARTITION_FETCH_BYTES
     value: "5242880"
@@ -522,7 +588,7 @@ kafka:
   - name: KAFKA_CFG_MESSAGE_MAX_BYTES
     value: "5242880"
 
-## Worker that manages tasks and consumes user events to update and serve aggregated stats
+## Worker that manages tasks
 faustworker:
   name: faustworker
   enabled: true
@@ -565,14 +631,42 @@ faustworker:
   application:
     importParseChunkSizeBytes: 20000  # see transcrobes settings.py for comments
     importDetectChunkSizeBytes: 5000
-    port: 6066
-    statsPath: all_user_data
 
-  ## TODO: document
-  service:
-    annotations: {}
-    labels: {}
-    # nodePort: 6066  # mainly useful for debug
+## Worker that manages consuming and transforming user events to the statsdb
+sworker:
+  name: sworker
+  enabled: true
+  debug: false
 
-    servicePort: 6066
-    type: ClusterIP  # TODO: unused???
+  ## sworker container image
+  ##
+  image:
+    repository: transcrobes/transcrobes-sworker
+    tag: 0.7.0
+    pullPolicy: IfNotPresent
+
+
+  ## desc here FIXME:
+  #
+  kafkaConnection:
+    consumerTimeoutMs: 5000  # millisecs
+    statsLoopSleepSecs: 10  # secs
+    maxPollRecords: 500  # 500 is default
+
+  ## Number of sworkers to launch
+  ##
+  replicaCount: 1
+
+  ## Additional faustworker container environment variable
+  ##
+  extraEnv:
+    PYTHONDONTWRITEBYTECODE: "1"
+
+  ## Strategy, do not change unless you know what the code actually does and know the risks
+  ##
+  strategy:
+    type: Recreate
+
+  ## Annotations to be added to faustworker pods
+  ##
+  podAnnotations: {}

@@ -26,6 +26,16 @@ spec:
                   value: "{{ .Values.pgha.postgresql.password }}"
                 - name: PGHOST
                   value: {{ .Values.transcrobes.overrideDBHost | default (printf "%s-pgha-pgpool" .Release.Name) }}
+
+                - name: STATS_PGUSER
+                  value: "{{ .Values.statsdb.postgresql.username }}"
+                - name: STATS_PGDATABASE
+                  value: "{{ .Values.statsdb.postgresql.database }}"
+                - name: STATS_PGPASSWORD
+                  value: "{{ .Values.statsdb.postgresql.password }}"
+                - name: STATS_PGHOST
+                  value: {{ .Values.transcrobes.overrideDBHost | default (printf "%s-statsdb-pgpool" .Release.Name) }}
+
                 - name: DATA_ROOT
                   value: "{{ .Values.transcrobes.backups.dataRoot }}"
                 - name: BACKUPS_MEDIA_PATH
@@ -34,8 +44,6 @@ spec:
                   value: "{{ .Values.transcrobes.backups.dataRoot }}{{ .Values.transcrobes.backups.databasePath }}"
                 - name: MEDIA_ROOT
                   value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.persistence.mediaPath }}"
-                - name: STATS_URL_ENDPOINT
-                  value: http://{{ include "transcrobes.faustworker.fullname" . }}:{{ .Values.faustworker.application.port }}/{{ .Values.faustworker.application.statsPath }}
 
                 {{- if .Values.transcrobes.backups.ssh.enabled }}
                 - name: BACKUPS_SSH_KEY_PATH

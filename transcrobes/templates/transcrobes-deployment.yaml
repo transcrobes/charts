@@ -124,6 +124,18 @@ spec:
               value: {{ .Values.transcrobes.overrideDBHost | default (printf "%s-pgha-pgpool" .Release.Name) }}
             - name: POSTGRES_PORT
               value: "{{ .Values.pgha.service.ports.postgresql }}"
+
+            - name: STATS_POSTGRES_USER
+              value: "{{ .Values.statsdb.postgresql.username }}"
+            - name: STATS_POSTGRES_DB
+              value: "{{ .Values.statsdb.postgresql.database }}"
+            - name: STATS_POSTGRES_PASSWORD
+              value: "{{ .Values.statsdb.postgresql.password }}"
+            - name: STATS_POSTGRES_SERVER
+              value: {{ .Values.transcrobes.overrideStatsDBHost | default (printf "%s-statsdb-pgpool" .Release.Name) }}
+            - name: STATS_POSTGRES_PORT
+              value: "{{ .Values.statsdb.service.ports.postgresql }}"
+
             - name: MEDIA_ROOT
               value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.persistence.mediaPath }}"
             - name: DATA_ROOT
@@ -160,7 +172,7 @@ spec:
             - name: ZH_CORENLP_HOST
               value: {{ include "transcrobes.corenlpZh.fullname" . }}
             {{- if .Values.transcrobes.debug }}
-            - name: TRANSCROBES_DEBUG
+            - name: DEBUG
               value: "True"
             {{- end }}
             - name: BING_SUBSCRIPTION_KEY
@@ -222,8 +234,6 @@ spec:
 
             - name: FAUST_HOST
               value: {{ include "transcrobes.faustworker.fullname" . }}
-            - name: FAUST_PORT
-              value: "{{ .Values.faustworker.application.port }}"
 
             - name: USERS_OPEN_REGISTRATION
               value: "{{ .Values.transcrobes.usersOpenRegistration }}"

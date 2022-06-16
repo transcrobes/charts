@@ -18,6 +18,14 @@ dependencies:
     tags:
       - transcrobes-database
 
+  - name: postgresql-ha
+    version: 9.x.x
+    alias: statsdb
+    repository: https://charts.bitnami.com/bitnami
+    condition: pgha.enabled
+    tags:
+      - transcrobes-statsdatabase
+
   - name: kafka
     version: 17.x.x
     repository: https://charts.bitnami.com/bitnami
