@@ -203,7 +203,7 @@ spec:
               value: "{{ .Values.transcrobes.broadcasterMessagingLayer }}"
 
             - name: PROJECT_NAME
-              value: {{ include "transcrobes.transcrobes.fullname" . }}
+              value: "{{ .Values.transcrobes.projectName }}"
             - name: FIRST_SUPERUSER
               value: "{{ .Values.transcrobes.firstSuperuser }}"
             - name: FIRST_SUPERUSER_PASSWORD
