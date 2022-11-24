@@ -169,16 +169,34 @@ spec:
               value: "{{ .Values.transcrobes.application.listenAddress }}"
             - name: LISTEN_PORT
               value: "{{ .Values.transcrobes.application.listenPort }}"
-            - name: ZH_CORENLP_HOST
-              value: {{ include "transcrobes.corenlpZh.fullname" . }}
+
             {{- if .Values.transcrobes.debug }}
             - name: DEBUG
               value: "True"
             {{- end }}
+
             - name: BING_SUBSCRIPTION_KEY
               value: "{{ .Values.transcrobes.bingSubscriptionKey }}"
             - name: BING_API_HOST
               value: "{{ .Values.transcrobes.bingApiHost }}"
+            - name: BING_TRANSLATOR_INMEM
+              value: "{{ .Values.transcrobes.bingTranslator.inmem }}"
+            - name: BING_TRANSLITERATOR_INMEM
+              value: "{{ .Values.transcrobes.bingTransliterator.inmem }}"
+
+            - name: EN_CORENLP_HOST
+              value: {{ include "transcrobes.corenlpEn.fullname" . }}
+            - name: EN_ZH_ABC_DICT_PATH
+              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.enZhAbcDict.path }}"
+            - name: EN_ZH_ABC_DICT_INMEM
+              value: "{{ .Values.transcrobes.enZhAbcDict.inmem }}"
+            - name: EN_SUBTLEX_FREQ_PATH
+              value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.enSubtlexFreq.path }}"
+            - name: EN_SUBTLEX_FREQ_INMEM
+              value: "{{ .Values.transcrobes.enSubtlexFreq.inmem }}"
+
+            - name: ZH_CORENLP_HOST
+              value: {{ include "transcrobes.corenlpZh.fullname" . }}
             - name: ZH_EN_CEDICT_PATH
               value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.zhEnCedict.path }}"
             - name: ZH_EN_CEDICT_INMEM
@@ -191,17 +209,13 @@ spec:
               value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.zhHskLists.path }}"
             - name: ZH_HSK_LISTS_INMEM
               value: "{{ .Values.transcrobes.zhHskLists.inmem }}"
-            - name: BING_TRANSLATOR_INMEM
-              value: "{{ .Values.transcrobes.bingTranslator.inmem }}"
-            - name: BING_TRANSLITERATOR_INMEM
-              value: "{{ .Values.transcrobes.bingTransliterator.inmem }}"
             - name: ZH_SUBTLEX_FREQ_PATH
               value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.zhSubtlexFreq.path }}"
             - name: ZH_SUBTLEX_FREQ_INMEM
               value: "{{ .Values.transcrobes.zhSubtlexFreq.inmem }}"
+
             - name: BROACASTER_MESSAGING_LAYER
               value: "{{ .Values.transcrobes.broadcasterMessagingLayer }}"
-
             - name: PROJECT_NAME
               value: "{{ .Values.transcrobes.projectName }}"
             - name: FIRST_SUPERUSER

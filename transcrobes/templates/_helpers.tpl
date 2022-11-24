@@ -37,6 +37,16 @@ chart: {{ .Chart.Name }}-{{ .Chart.Version }}
 heritage: {{ .Release.Service }}
 {{- end -}}
 
+{{- define "transcrobes.corenlpEn.labels" -}}
+{{ include "transcrobes.corenlpEn.matchLabels" . }}
+{{ include "transcrobes.common.metaLabels" . }}
+{{- end -}}
+
+{{- define "transcrobes.corenlpEn.matchLabels" -}}
+component: {{ .Values.corenlpEn.name | quote }}
+{{ include "transcrobes.common.matchLabels" . }}
+{{- end -}}
+
 {{- define "transcrobes.corenlpZh.labels" -}}
 {{ include "transcrobes.corenlpZh.matchLabels" . }}
 {{ include "transcrobes.common.metaLabels" . }}
@@ -107,6 +117,19 @@ component: {{ .Values.faustworker.name | quote }}
 {{ include "transcrobes.common.matchLabels" . }}
 {{- end -}}
 
+{{- define "transcrobes.corenlpEn.fullname" -}}
+{{- if .Values.corenlpEn.fullnameOverride -}}
+{{- .Values.corenlpEn.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- $name := default .Chart.Name .Values.nameOverride -}}
+{{- if contains $name .Release.Name -}}
+{{- printf "%s-%s" .Release.Name .Values.corenlpEn.name | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- printf "%s-%s-%s" .Release.Name $name .Values.corenlpEn.name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
 {{- define "transcrobes.corenlpZh.fullname" -}}
 {{- if .Values.corenlpZh.fullnameOverride -}}
 {{- .Values.corenlpZh.fullnameOverride | trunc 63 | trimSuffix "-" -}}
@@ -172,6 +195,17 @@ Create the name of the service account to use for the transcrobes component
 {{- else -}}
 {{- printf "%s-%s-%s" .Release.Name $name .Values.faustworker.name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Create the name of the service account to use for the corenlpEn component
+*/}}
+{{- define "transcrobes.serviceAccountName.corenlpEn" -}}
+{{- if .Values.serviceAccounts.corenlpEn.create -}}
+    {{ default (include "transcrobes.corenlpEn.fullname" .) .Values.serviceAccounts.corenlpEn.name }}
+{{- else -}}
+    {{ default "default" .Values.serviceAccounts.corenlpEn.name }}
 {{- end -}}
 {{- end -}}
 

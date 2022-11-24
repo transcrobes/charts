@@ -29,6 +29,94 @@ ingress:
     secretName: letsencrypt-cert-staging
 
 
+## Stanford's CoreNLP with English model
+##
+corenlpEn:
+  ## If false, corenlp will not be installed
+  ##
+  enabled: true
+
+  ## corenlp container name
+  ##
+  name: corenlpen
+
+  ## corenlp container image
+  ##
+  image:
+    repository: transcrobes/corenlp-english
+    tag: 4.5.1
+    pullPolicy: IfNotPresent
+
+  ## Annotations to be added to corenlp pods
+  ##
+  podAnnotations: {}
+
+  ## Number of replicas of CoreNLP. CoreNLP takes at least 800MB of RAM for Chinese, even using a special,
+  ## reduced model that they (very nicely!) specially created for us, and is a huge consumer of CPU and
+  ## bandwidth. Best performance will probably have one of these everywhere, with the possible exception
+  ## of the master DB.
+  ## TODO: Maybe use taints somehow?
+  ##
+  replicaCount: 1
+
+  ## Additional corenlp container environment variable
+  ## For instance to add a http_proxy
+  ##
+  extraEnv: {}
+
+  ## Strategy
+  ##
+  strategy:
+    type: Recreate
+
+  ## TODO: document
+  service:
+    annotations: {}  # TODO: unused???
+    labels: {}  # TODO: unused???
+    clusterIP: ""  # TODO: unused???
+
+    loadBalancerIP: ""  # TODO: unused???
+    loadBalancerSourceRanges: []  # TODO: unused???
+    servicePort: 80
+    type: ClusterIP  # TODO: unused???
+
+  ## Configuration for the liveness and readiness probes
+  ## liveness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes
+  ## WARNING! These are high by default for a reason - when doing "large" chunks (> a few kbytes) it can take
+  ## many seconds, particularly when depparse is used. When the queue gets many real, large chunks to proceess
+  ## there can be many seconds before a readiness probe will get scheduled. This means if the timeout is too
+  ## low, the container will get killed just when it's doing its job
+  ##
+  liveness:
+    initialDelaySeconds: 60
+    periodSeconds: 60
+    timeoutSeconds: 30
+
+  ## readiness, see https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes
+  readiness:
+    initialDelaySeconds: 20
+    periodSeconds: 20
+    timeoutSeconds: 30
+
+  ## CoreNLP java launch parameters, see
+  ## https://stanfordnlp.github.io/CoreNLP/corenlp-server.html#command-line-flags
+  ## for details. Only the below values are currently supported
+  application:
+    listenPort: 9000
+    queryTimeoutMs: 60000
+    javaXmx: 1000m
+    coreNlpNbThreads: 4
+
+  ## Additional corenlp container arguments
+  ##
+  extraArgs: {}
+
+  ## The URL prefix at which the container can be accessed. Useful in the case the '-web.external-url' includes a slug
+  ## so that the various internal URLs are still able to access as they are in the default case.
+  ## (Optional)
+  prefixURL: ""
+
+
 ## Stanford's CoreNLP with minimal Chinese model
 ##
 corenlpZh:
@@ -38,13 +126,13 @@ corenlpZh:
 
   ## corenlp container name
   ##
-  name: corenlp-zh
+  name: corenlpzh
 
   ## corenlp container image
   ##
   image:
     repository: transcrobes/corenlp-chinese
-    tag: 4.2.2
+    tag: 4.5.1
     pullPolicy: IfNotPresent
 
   ## Annotations to be added to corenlp pods
@@ -223,7 +311,7 @@ transcrobes:
     ##
     image:
       repository: transcrobes/transcrobes-backups
-      tag: 0.2.0
+      tag: 0.3.0
       pullPolicy: IfNotPresent
 
     cronSchedule: '0 * * * *'
@@ -237,6 +325,8 @@ transcrobes:
     dataRoot: '/opt/backups/'
     mediaPath: 'media'
     databasePath: 'data'
+
+    extraEnv: {}
 
     ## If ssh is enabled, then will attempt to rsync to the remote destination after backup
     ## The destination server needs to be already set up to accept ssh login via key, with
@@ -312,6 +402,12 @@ transcrobes:
     inmem: False
   zhSubtlexFreq:
     path: 'data/zh_subtlex.utf8.txt'
+    inmem: False
+  enZhAbcDict:
+    path: 'data/en_zh_abc_dict.txt'
+    inmem: False
+  enSubtlexFreq:
+    path: 'data/en_subtlex.utf8.txt'
     inmem: False
 
   ## Bing results are cached to the db, also cache in memory?

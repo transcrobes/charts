@@ -11,7 +11,7 @@ home: https://transcrob.es
 icon: https://transcrob.es/img/tc128.png
 dependencies:
   - name: postgresql-ha
-    version: 9.x.x
+    version: 10.x.x
     alias: pgha
     repository: https://charts.bitnami.com/bitnami
     condition: pgha.enabled
@@ -19,7 +19,7 @@ dependencies:
       - transcrobes-database
 
   - name: postgresql-ha
-    version: 9.x.x
+    version: 10.x.x
     alias: statsdb
     repository: https://charts.bitnami.com/bitnami
     condition: pgha.enabled

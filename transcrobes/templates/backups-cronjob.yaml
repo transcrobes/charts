@@ -45,6 +45,11 @@ spec:
                 - name: MEDIA_ROOT
                   value: "{{ .Values.transcrobes.persistence.dataRoot }}{{ .Values.transcrobes.persistence.mediaPath }}"
 
+                {{- range $key, $value := .Values.transcrobes.backups.extraEnv }}
+                - name: {{ $key }}
+                  value: "{{ $value }}"
+                {{- end }}
+
                 {{- if .Values.transcrobes.backups.ssh.enabled }}
                 - name: BACKUPS_SSH_KEY_PATH
                   value: "{{ .Values.transcrobes.backups.ssh.keysDirectory }}/{{ .Values.transcrobes.backups.ssh.keyKey }}"
